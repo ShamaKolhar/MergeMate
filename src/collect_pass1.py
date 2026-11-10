@@ -1,4 +1,5 @@
 import sys
+import time
 from datetime import datetime
 from db import get_connection, create_pr_tables
 from github_client import graphql
@@ -6,7 +7,7 @@ from github_client import graphql
 QUERY = """
 query($owner: String!, $name: String!, $cursor: String) {
   repository(owner: $owner, name: $name) {
-    pullRequests(first: 100, after: $cursor, orderBy: {field: CREATED_AT, direction: ASC}) {
+    pullRequests(first: 50, after: $cursor, orderBy: {field: CREATED_AT, direction: ASC}) {
       pageInfo { hasNextPage endCursor }
       nodes {
         number
@@ -60,7 +61,7 @@ def collect_repo(con, repo):
         done = not prs["pageInfo"]["hasNextPage"]
         con.execute("INSERT OR REPLACE INTO collection_state VALUES (?, ?, ?, ?)",
                     [repo, cursor, done, datetime.now()])
-
+        time.sleep(1)
         pages += 1
         if pages % 10 == 0:
             print(f"  {pages} pages | points left: {data['rateLimit']['remaining']}")

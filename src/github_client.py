@@ -22,17 +22,26 @@ def get_with_retry(url, params=None, retries=3):
 
 GRAPHQL_URL = "https://api.github.com/graphql"
 
-def graphql(query, variables, retries=3):
-    """Send a GraphQL query with retries. Returns the 'data' part, or None on failure."""
+def graphql(query, variables, retries=5):
+    """Send a GraphQL query with retries. Waits longer when GitHub says we're going too fast."""
     for attempt in range(1, retries + 1):
         try:
             r = requests.post(GRAPHQL_URL, headers=HEADERS,
                               json={"query": query, "variables": variables}, timeout=60)
-            body = r.json()
-            if r.status_code == 200 and "errors" not in body:
-                return body["data"]
-            print(f"  GraphQL problem (status {r.status_code}): {body.get('errors') or body}")
+            if r.status_code == 200:
+                body = r.json()
+                if "errors" not in body:
+                    return body["data"]
+                print(f"  attempt {attempt}: GraphQL errors: {body['errors']}")
+                wait = 5 * attempt
+            elif r.status_code in (403, 429):                         # secondary rate limit
+                wait = int(r.headers.get("retry-after", 60))         # GitHub tells us how long to wait
+                print(f"  attempt {attempt}: rate limited ({r.status_code}), waiting {wait}s")
+            else:                                                     # e.g. 502 = server timed out
+                wait = 10 * attempt
+                print(f"  attempt {attempt}: status {r.status_code}, waiting {wait}s")
         except requests.exceptions.RequestException as e:
-            print(f"  attempt {attempt} failed ({type(e).__name__})")
-        time.sleep(5 * attempt)
+            wait = 10 * attempt
+            print(f"  attempt {attempt} failed ({type(e).__name__}), waiting {wait}s")
+        time.sleep(wait)
     return None
