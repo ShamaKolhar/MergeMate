@@ -19,3 +19,20 @@ def get_with_retry(url, params=None, retries=3):
             print(f"  attempt {attempt} failed ({type(e).__name__})")
             time.sleep(5 * attempt)
     return None
+
+GRAPHQL_URL = "https://api.github.com/graphql"
+
+def graphql(query, variables, retries=3):
+    """Send a GraphQL query with retries. Returns the 'data' part, or None on failure."""
+    for attempt in range(1, retries + 1):
+        try:
+            r = requests.post(GRAPHQL_URL, headers=HEADERS,
+                              json={"query": query, "variables": variables}, timeout=60)
+            body = r.json()
+            if r.status_code == 200 and "errors" not in body:
+                return body["data"]
+            print(f"  GraphQL problem (status {r.status_code}): {body.get('errors') or body}")
+        except requests.exceptions.RequestException as e:
+            print(f"  attempt {attempt} failed ({type(e).__name__})")
+        time.sleep(5 * attempt)
+    return None
