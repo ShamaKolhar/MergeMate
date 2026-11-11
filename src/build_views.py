@@ -5,6 +5,7 @@ EXTRA_BOTS = ["tripleabuilderbot", "svcnemo-autobot", "fossabot",
 TARGET_WINDOW_DAYS = 30
 WINDOW_START = "2021-01-01"
 WINDOW_END = "2026-10-11"
+EARLY_REPO_DAYS = 90
 def create_clean_view(con):
     bot_list = ", ".join(f"'{name}'" for name in EXTRA_BOTS)
     con.execute(f"""
@@ -32,24 +33,32 @@ def create_flagged_view(con):
         FROM prs_clean
     """)
 def create_newcomer_view(con):
-    """One row per newcomer PR in the modelling window, with the 30-day merge target."""
+    """One row per real newcomer PR in the modelling window, with the 30-day merge target."""
     con.execute(f"""
         CREATE OR REPLACE VIEW newcomer_prs AS
-        SELECT *,
-               CASE WHEN merged_at IS NOT NULL
-                         AND merged_at <= created_at + INTERVAL {TARGET_WINDOW_DAYS} DAY
+        WITH repo_start AS (
+            SELECT repo, MIN(created_at) AS repo_first_pr_at
+            FROM pull_requests
+            GROUP BY repo
+        )
+        SELECT p.*,
+               r.repo_first_pr_at,                                   -- kept for a 'repo age' feature later
+               CASE WHEN p.merged_at IS NOT NULL
+                         AND p.merged_at <= p.created_at + INTERVAL {TARGET_WINDOW_DAYS} DAY
                     THEN 1 ELSE 0 END AS merged_30d
-        FROM prs_flagged
-        WHERE is_newcomer
-          AND created_at >= '{WINDOW_START}'
-          AND created_at <  '{WINDOW_END}'
+        FROM prs_flagged p
+        JOIN repo_start r USING (repo)
+        WHERE p.is_newcomer
+          AND p.created_at >= '{WINDOW_START}'
+          AND p.created_at <  '{WINDOW_END}'
+          AND p.created_at >= r.repo_first_pr_at + INTERVAL {EARLY_REPO_DAYS} DAY   -- decision A
     """)
 if __name__ == "__main__":
     con = get_connection()
     create_clean_view(con)
     create_flagged_view(con)
     create_newcomer_view(con)
-    
+
     raw = con.execute("SELECT COUNT(*) FROM pull_requests").fetchall()[0][0]
     clean = con.execute("SELECT COUNT(*) FROM prs_clean").fetchall()[0][0]
     print(f"Raw PRs:   {raw:,}")
