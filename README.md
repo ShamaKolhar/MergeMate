@@ -131,7 +131,6 @@ The repository a newcomer picks explains a lot on its own. The PR's own features
 - **Timeouts and hidden rate limits.** The first full collection run hit GitHub's secondary rate limit and server timeouts on 18 of 50 repos. Smaller pages, a pause between requests, and waiting for the time GitHub asks for (`retry-after`) fixed it. Pass 2 later ran with almost no errors.
 - **An effect hidden by resubmissions.** The first retention analysis said a newcomer's first experience didn't matter. Breaking down when people came back showed 64% of "returns" after a rejection happened within a day, which were mostly the same change resubmitted.
 - **Comparing years fairly.** Raw "still open" counts made 2026 look terrible, but recent PRs simply hadn't had as much time. Measuring every PR at exactly day 30 fixed the comparison.
-- **A library crash.** LightGBM 4.7 crashed with a native access violation on my Windows setup, even on random data. I narrowed it down with minimal tests (data, NumPy version, OpenMP runtime and the NumPy–ctypes bridge all ruled out; the crash is in LightGBM's label-setting call). *Resolution in progress.*
 
 ## Limitations
 
