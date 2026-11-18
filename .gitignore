@@ -4,3 +4,6 @@ data/
 __pycache__/
 .vscode/
 scratch/
+mlflow.db
+mlruns/
+mlartifacts/

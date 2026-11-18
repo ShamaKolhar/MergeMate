@@ -33,3 +33,11 @@ def fold_split(train, train_end, val_start, val_end):
     tr = train[train["created_at"] < train_end]
     va = train[(train["created_at"] >= val_start) & (train["created_at"] < val_end)]
     return tr, va
+
+# Best LightGBM settings from Optuna (40 trials, recent folds weighted double), Day 6
+BEST_LGBM_PARAMS = dict(
+    n_estimators=422, learning_rate=0.013931194895496962, num_leaves=31,
+    min_child_samples=29, subsample=0.678191614034533, subsample_freq=1,
+    colsample_bytree=0.9446780534925167, reg_lambda=7.189912375733872,
+    random_state=42, verbose=-1,
+)
