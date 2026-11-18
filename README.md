@@ -4,7 +4,7 @@
 
 Most people who open their first pull request to an open-source project never come back. I wanted to understand why, using real GitHub data, and then build something that could help: a model that estimates a newcomer's chance of getting merged, and a coach that checks their PR against the project's own contribution rules.
 
-> **Status:** data collection, product analytics, feature engineering and the baseline model are done. Gradient boosting, explainability, the RAG coach and the deployed app are in progress (see [Roadmap](#roadmap)).
+> **Status:** data collection, product analytics, modelling, the final 2026 test and SHAP explanations are done. Calibration, the RAG coach and the deployed app are in progress (see [Roadmap](#roadmap)).
 
 ---
 
@@ -28,6 +28,8 @@ Data: 189,606 pull requests from 50 open-source repositories (Go, Java, Python, 
 
 **5. AI reviewers are now among the most active accounts on newcomer PRs.** CodeRabbit was the single most active commenter in the dataset. I excluded AI reviewers and other bots when measuring human response time.
 
+**6. The repository matters more than the PR, but PR size is the biggest thing a newcomer controls.** The strongest signal in the model is how often the repo has merged newcomer PRs recently, which says more about the maintainers than the contributor. Among things a newcomer can change, size dominates, and the effect is lopsided: a very large PR is pulled down far more than a small one is lifted up. See [Explaining predictions](#explaining-predictions).
+
 ---
 
 ## How it works
@@ -40,8 +42,9 @@ flowchart LR
     D --> E[Cleaning + newcomer flag<br/>+ 30-day target]
     E --> F[Pass 2: GraphQL<br/>details for 11k newcomer PRs]
     F --> G[Point-in-time features]
-    G --> H[Models<br/>time-based validation]
-    H --> I[RAG coach + app]
+    G --> H[LightGBM + Optuna<br/>time-based validation, MLflow]
+    H --> X[SHAP<br/>per-PR explanations]
+    X --> I[RAG coach + app]
 ```
 
 ## Data
@@ -113,15 +116,58 @@ The merge rate drifts over time (55% in the training years, 37.5% in 2026), so a
 - **30-day embargo** between training and validation data in every fold, and before the test set, because the 30-day target would otherwise overlap.
 - **Test:** January to October 2026, held out until the end.
 
-### Results so far (cross-validation, mean of 5 folds)
+### Tuning and tracking
 
-| Model | ROC-AUC | PR-AUC |
-|---|---|---|
-| Repo's recent merge rate only | 0.693 | 0.693 |
-| Logistic regression, all features | 0.743 | 0.767 |
-| Gradient boosting | *in progress* | |
+- Every cross-validation run is logged to **MLflow** (parameters, per-fold scores, mean and last-fold scores), so model comparisons don't live in my terminal history.
+- LightGBM was tuned with **Optuna** (40 trials, TPE sampler, fixed seed) on the cross-validation folds only. The objective weights the two most recent folds double, because those look most like the data the model will actually face.
 
-The repository a newcomer picks explains a lot on its own. The PR's own features add a meaningful amount on top, and those are the things a newcomer can actually change. Performance falls in the most recent fold (ROC-AUC 0.704), where the merge rate starts to drop, so I expect the 2026 test score to be lower than the cross-validation average.
+### Cross-validation results (mean of 5 folds)
+
+| Model | ROC-AUC | PR-AUC | Most recent fold ROC-AUC |
+|---|---|---|---|
+| Repo's recent merge rate only | 0.693 | 0.693 | |
+| Logistic regression, all features | 0.743 | 0.767 | 0.704 |
+| LightGBM, tuned | **0.763** | **0.780** | **0.742** |
+
+The repository a newcomer picks explains a lot on its own. The PR's own features add a meaningful amount on top, and those are the things a newcomer can actually change.
+
+### Final test on 2026 data
+
+Run once, after all tuning was finished.
+
+| Model | ROC-AUC | PR-AUC | Brier score | Mean predicted |
+|---|---|---|---|---|
+| Logistic regression | 0.713 | 0.619 | 0.203 | 0.406 |
+| LightGBM, tuned | 0.714 | 0.610 | 0.203 | 0.416 |
+| *Actual merge rate* | | | | *0.375* |
+
+On 2026 data the two models are effectively tied. LightGBM's lead in cross-validation didn't carry over, and both lose about 0.03–0.05 ROC-AUC compared with cross-validation. The main limit isn't the algorithm, it's drift: the merge rate in 2026 is lower than anything in the training data, and both models still expect it to be a bit higher (about 41% predicted vs 37.5% actual).
+
+I kept **LightGBM as the app model** and logistic regression as the benchmark. It was ahead in cross-validation, on average and on the most recent fold, it picks up non-linear patterns that a linear model can't (title length has a sweet spot rather than "longer is better"), and tree-based SHAP gives exact explanations for each prediction. I'm not claiming it beats the simpler model on 2026 data, because it doesn't.
+
+### Explaining predictions
+
+I used SHAP to break each prediction into the push from every feature.
+
+![SHAP summary](docs/figures/04_shap_summary.png)
+
+What the model relies on, across all 2026 test PRs:
+
+- **Repository context comes first.** The repo's recent newcomer merge rate is the strongest signal, followed by the open PR backlog. Busy repos with large backlogs merge fewer newcomer PRs.
+- **Size is the biggest thing a newcomer controls, and it cuts one way.** Large PRs lose up to 1.5 in log-odds; very small ones gain about 0.5.
+- **New GitHub accounts do worse.** This probably reflects trust rather than skill, since brand-new accounts include a lot of one-off and low-effort PRs.
+- **Older repos are slightly harder to get into.** Mature projects tend to have stricter standards and more people competing for review time.
+- **Docs-only changes, touching tests, linking an issue and filling in the checklist all help.** Very short titles hurt.
+- **Three features contribute nothing:** touching CI config, the yes/no "has PRs elsewhere" flag and the empty-description flag. The last two duplicate more detailed features. I left them in rather than change the model after the test set had been used.
+
+These are patterns the model uses, not causes. Docs-only PRs get merged more because they're easier to review, not because writing docs is a strategy.
+
+For a single PR, the app splits the explanation into two groups:
+
+- **What you can improve:** size, tests, linking an issue, the checklist, title and description.
+- **Context:** the repo's merge rate, backlog and age, the author's account age, language and weekday. Docs-only sits here too, because "make your bug fix a docs change" isn't advice anyone can follow.
+
+The split is my judgement, not something the model learnt. Two small rules keep the advice sensible: a docs-only PR is never told to add tests, and the hour a PR was opened is never shown, because the effect is tiny, it's in UTC, and it's unlikely to be causal.
 
 ---
 
@@ -130,6 +176,8 @@ The repository a newcomer picks explains a lot on its own. The PR's own features
 - **A field that leaked the answer.** My first plan used GitHub's `author_association` to find newcomers. A quick check showed PRs labelled `NONE` were merged 0% of the time and `CONTRIBUTOR` 94% of the time. GitHub updates the label after a merge, so it was encoding the outcome. I dropped it and built the newcomer flag from PR history instead.
 - **Timeouts and hidden rate limits.** The first full collection run hit GitHub's secondary rate limit and server timeouts on 18 of 50 repos. Smaller pages, a pause between requests, and waiting for the time GitHub asks for (`retry-after`) fixed it. Pass 2 later ran with almost no errors.
 - **An effect hidden by resubmissions.** The first retention analysis said a newcomer's first experience didn't matter. Breaking down when people came back showed 64% of "returns" after a rejection happened within a day, which were mostly the same change resubmitted.
+- **A crash that wasn't my code.** LightGBM 4.7 crashed Python outright (an access violation) as soon as training started. Before switching to XGBoost I wanted to know why, so I narrowed it down: it crashed even on random data, and changing the NumPy version, the OpenMP runtime and the data types made no difference. LightGBM 4.5 failed for a different reason (incompatible with my scikit-learn version), while 4.6.0 worked. The cause was the 4.7 release itself, so I pinned `lightgbm==4.6.0`.
+- **Not tuning on the test set.** It would have been easy to keep adjusting the model after seeing the 2026 score. I tuned only on cross-validation folds, ran the test once, and reported the tie as it came out.
 - **Comparing years fairly.** Raw "still open" counts made 2026 look terrible, but recent PRs simply hadn't had as much time. Measuring every PR at exactly day 30 fixed the comparison.
 
 ## Limitations
@@ -148,8 +196,10 @@ The repository a newcomer picks explains a lot on its own. The PR's own features
 - [x] Cleaning, newcomer definition, 30-day target
 - [x] Product analytics: funnel, retention, drift, response time
 - [x] Point-in-time features and logistic regression baseline
-- [ ] Gradient boosting with hyperparameter tuning and experiment tracking
-- [ ] SHAP explanations, calibration, final test on 2026 data
+- [x] Gradient boosting with hyperparameter tuning (Optuna) and experiment tracking (MLflow)
+- [x] Final test on 2026 data
+- [x] SHAP explanations, global and per PR
+- [ ] Calibration of predicted probabilities
 - [ ] RAG coach: checks a PR against the repo's CONTRIBUTING.md and PR template
 - [ ] A/B test design for the coach
 - [ ] FastAPI + Streamlit app, deployed
@@ -165,9 +215,15 @@ src/
   collect_pass2.py      details for newcomer PRs (GraphQL, resumable)
   build_views.py        cleaning, newcomer flag, target (SQL views)
   features.py           point-in-time feature tables
-  model_config.py       feature lists and time-based folds
-  train_baseline.py     baseline models
-analysis/               data quality checks, funnel, retention, drift, response time, charts
+  model_config.py       feature lists, readable labels, time-based folds, tuned parameters
+  train_baseline.py     rule-based and logistic regression baselines
+  train_lgbm.py         first LightGBM run
+  train_cv.py           cross-validation with MLflow logging
+  tune_lgbm.py          Optuna tuning on the cross-validation folds
+  final_eval.py         one-time 2026 test, saves the final model
+  explain.py            per-PR SHAP explanation, split into fixable vs context
+analysis/               data quality checks, funnel, retention, drift, response time, SHAP, charts
+models/                 the trained LightGBM model used by the app
 docs/figures/           charts used in this README
 repos.csv               the 50 selected repositories
 ```
@@ -196,12 +252,23 @@ python src/collect_pass2.py      # about an hour
 python src/build_views.py
 python src/features.py
 python src/train_baseline.py
+python src/train_cv.py
+python src/tune_lgbm.py          # about 40 trials
+python src/final_eval.py         # runs the 2026 test and saves models/lgbm_final.joblib
+python analysis/09_shap.py
+```
+
+To browse the experiment runs:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 
 ## Built with
 
-Python, DuckDB, SQL, pandas, scikit-learn, matplotlib, GitHub REST and GraphQL APIs. Planned: XGBoost/LightGBM, Optuna, MLflow, SHAP, LangChain, Claude, Chroma, FastAPI, Streamlit, Docker.
+Python, DuckDB, SQL, pandas, scikit-learn, LightGBM, Optuna, MLflow, SHAP, matplotlib, GitHub REST and GraphQL APIs. Planned: LangChain, Claude, Chroma, FastAPI, Streamlit, Docker.
 
 ---
 
 Data comes from public GitHub repositories through the GitHub API. Numbers reflect data collected on 10–11 November 2026.
+ 
