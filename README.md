@@ -4,7 +4,7 @@
 
 Most people who open their first pull request to an open-source project never come back. I wanted to understand why, using real GitHub data, and then build something that could help: a model that estimates a newcomer's chance of getting merged, and a coach that checks their PR against the project's own contribution rules.
 
-> **Status:** data collection, product analytics, modelling, the final 2026 test and SHAP explanations are done. Calibration, the RAG coach and the deployed app are in progress (see [Roadmap](#roadmap)).
+> **Status:** data collection, product analytics, modelling, the final 2026 test, SHAP explanations and calibration are done. The RAG coach and the deployed app are in progress (see [Roadmap](#roadmap)).
 
 ---
 
@@ -145,6 +145,25 @@ On 2026 data the two models are effectively tied. LightGBM's lead in cross-valid
 
 I kept **LightGBM as the app model** and logistic regression as the benchmark. It was ahead in cross-validation, on average and on the most recent fold, it picks up non-linear patterns that a linear model can't (title length has a sweet spot rather than "longer is better"), and tree-based SHAP gives exact explanations for each prediction. I'm not claiming it beats the simpler model on 2026 data, because it doesn't.
 
+### Calibration
+
+The app shows newcomers a percentage, so the percentages need to be honest, not just the ranking. On 2026 data the model was too optimistic: it predicted 41.6% on average when 37.5% were merged, and in the weakest tenth of PRs it said 18% when the real rate was 8%.
+
+The cause is the same drift as before. The model learnt what "normal" looks like from years when more newcomer PRs got merged. So the fix shifts every score down by one constant in log-odds, which keeps the order of PRs (and the ROC-AUC) unchanged and keeps every score between 0 and 100%.
+
+To keep the test honest, the size of the shift came only from pre-2026 data. In each cross-validation fold I measured how much the model over-predicted the following half-year. The shift was close to zero in 2023 and early 2024, then turned negative once the merge rate started falling (−0.14, −0.12, −0.21). I used the average of those three drift-era folds, −0.16, and checked it on 2026 once.
+
+| 2026 test | Mean predicted | ECE | Brier score | ROC-AUC |
+|---|---|---|---|---|
+| Before | 0.416 | 0.045 | 0.203 | 0.714 |
+| After shift | **0.382** | **0.028** | 0.202 | 0.714 |
+
+*Actual merge rate: 0.375. ECE is the average gap between predicted and actual rates across ten equal-sized groups.*
+
+The calibration error dropped by more than a third. The middle 80% of PRs are now within about 3 points. The two ends still miss in opposite directions: the weakest PRs are worse than the model thinks, and the strongest are better. That's a spread problem a single shift can't fix, and fixing it properly would mean learning from 2026 data, so I've left it as a known limitation.
+
+For the app, the shift is refreshed from the most recent 90 days with known outcomes (1,349 PRs), the way a production model would be maintained month to month. That refresh gave −0.18, close to the −0.16 learnt from 2025, which suggests the correction is stable. It uses 2026 data, so it can't be re-tested on 2026; the honest test result is the table above.
+
 ### Explaining predictions
 
 I used SHAP to break each prediction into the push from every feature.
@@ -167,7 +186,7 @@ For a single PR, the app splits the explanation into two groups:
 - **What you can improve:** size, tests, linking an issue, the checklist, title and description.
 - **Context:** the repo's merge rate, backlog and age, the author's account age, language and weekday. Docs-only sits here too, because "make your bug fix a docs change" isn't advice anyone can follow.
 
-The split is my judgement, not something the model learnt. Two small rules keep the advice sensible: a docs-only PR is never told to add tests, and the hour a PR was opened is never shown, because the effect is tiny, it's in UTC, and it's unlikely to be causal.
+The split is my judgement, not something the model learnt. The calibration shift moves every PR's baseline by the same amount, so it doesn't change any of these pushes. Two small rules keep the advice sensible: a docs-only PR is never told to add tests, and the hour a PR was opened is never shown, because the effect is tiny, it's in UTC, and it's unlikely to be causal.
 
 ---
 
@@ -187,6 +206,8 @@ The split is my judgement, not something the model learnt. Two small rules keep 
 - Some company employees appear as outside contributors because their organisation membership is private.
 - "Earlier PRs elsewhere" only counts PRs within these 50 repositories.
 - The retention and response-time findings are associations, not causal effects.
+- Calibration is fixed on average, but scores are still too bunched towards the middle: the weakest PRs are over-predicted and the strongest slightly under-predicted.
+- The drift correction needs refreshing as the merge rate moves. A model left alone will drift out of calibration again.
 
 ---
 
@@ -199,7 +220,7 @@ The split is my judgement, not something the model learnt. Two small rules keep 
 - [x] Gradient boosting with hyperparameter tuning (Optuna) and experiment tracking (MLflow)
 - [x] Final test on 2026 data
 - [x] SHAP explanations, global and per PR
-- [ ] Calibration of predicted probabilities
+- [x] Calibration of predicted probabilities (drift-aware level shift)
 - [ ] RAG coach: checks a PR against the repo's CONTRIBUTING.md and PR template
 - [ ] A/B test design for the coach
 - [ ] FastAPI + Streamlit app, deployed
@@ -221,9 +242,11 @@ src/
   train_cv.py           cross-validation with MLflow logging
   tune_lgbm.py          Optuna tuning on the cross-validation folds
   final_eval.py         one-time 2026 test, saves the final model
-  explain.py            per-PR SHAP explanation, split into fixable vs context
+  calibration.py        drift correction: one log-odds shift for every score
+  refresh_level_shift.py  refits the app's shift on the latest 90 days
+  explain.py            per-PR probability and SHAP explanation, split into fixable vs context
 analysis/               data quality checks, funnel, retention, drift, response time, SHAP, charts
-models/                 the trained LightGBM model used by the app
+models/                 the trained LightGBM model and the current calibration shift, both used by the app
 docs/figures/           charts used in this README
 repos.csv               the 50 selected repositories
 ```
@@ -256,6 +279,9 @@ python src/train_cv.py
 python src/tune_lgbm.py          # about 40 trials
 python src/final_eval.py         # runs the 2026 test and saves models/lgbm_final.joblib
 python analysis/09_shap.py
+python analysis/12_level_shift.py      # how much each fold over-predicts the next half-year
+python analysis/13_calibration_test.py # before/after calibration on 2026
+python src/refresh_level_shift.py      # writes models/level_shift.json for the app
 ```
 
 To browse the experiment runs:
@@ -271,4 +297,3 @@ Python, DuckDB, SQL, pandas, scikit-learn, LightGBM, Optuna, MLflow, SHAP, matpl
 ---
 
 Data comes from public GitHub repositories through the GitHub API. Numbers reflect data collected on 10–11 November 2026.
- 
