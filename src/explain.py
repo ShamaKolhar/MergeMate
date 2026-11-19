@@ -2,7 +2,7 @@ import joblib
 import pandas as pd
 import shap
 from model_config import FEATURES, FEATURE_LABELS
-
+from calibration import apply_level_shift
 ACTIONABLE = ["log_additions", "log_deletions", "log_changed_files", "n_top_dirs",
               "touches_tests", "touches_ci", "touches_deps", "mentions_issue",
               "has_checklist", "title_len", "conventional_title", "log_body_len", "body_empty"]
@@ -21,10 +21,11 @@ class MergeExplainer:
     def __init__(self, model_path="models/lgbm_final.joblib"):
         self.model = joblib.load(model_path)
         self.explainer = shap.TreeExplainer(self.model)
-
+        with open("models/level_shift.json") as f:
+            self.shift = json.load(f)["shift"]
     def explain(self, row, top=3):
         X = row[FEATURES].astype("float64")
-        proba = float(self.model.predict_proba(X)[0, 1])
+        proba = float(apply_level_shift(self.model.predict_proba(X)[:, 1], self.shift)[0])
         sv = pd.Series(self.explainer(X).values[0], index=FEATURES)
                 # Don't suggest adding tests to a docs-only PR
         actionable = ACTIONABLE
