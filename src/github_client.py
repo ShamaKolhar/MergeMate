@@ -32,6 +32,8 @@ def graphql(query, variables, retries=5):
                 body = r.json()
                 if "errors" not in body:
                     return body["data"]
+                if all(e.get("type") == "NOT_FOUND" for e in body["errors"]):
+                    return body.get("data")      # it doesn't exist: retrying won't help
                 print(f"  attempt {attempt}: GraphQL errors: {body['errors']}")
                 wait = 5 * attempt
             elif r.status_code in (403, 429):                         # secondary rate limit

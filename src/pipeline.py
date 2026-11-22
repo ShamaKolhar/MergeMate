@@ -1,9 +1,23 @@
 """One call for the app: PR link -> calibrated score, SHAP explanation, coach advice."""
+import csv
 import json
 import sys
 from coach import Coach
 from explain import MergeExplainer
-from live_pr import fetch_pr, live_features
+from live_pr import fetch_pr, live_features, parse_pr_url
+
+# The 50 projects the model covers; keys are lower-case so "jabref/jabref" also matches
+with open("repos.csv") as f:
+    SUPPORTED = {r["full_name"].lower(): r["full_name"] for r in csv.DictReader(f)}
+
+
+def check_url(url):
+    """Cheap check before any API call: a PR link to one of the 50 projects. Returns the canonical link."""
+    repo, number = parse_pr_url(url)
+    if repo.lower() not in SUPPORTED:
+        raise ValueError(f"{repo} isn't one of the 50 projects MergeMate covers. "
+                         "See the list of supported projects.")
+    return f"https://github.com/{SUPPORTED[repo.lower()]}/pull/{number}"
 
 
 class MergeMate:
@@ -12,7 +26,7 @@ class MergeMate:
         self.coach = Coach()                  # loads the embedding model, Chroma and Claude once
 
     def analyze(self, url, with_coach=True, llm_model=None):
-        pr = fetch_pr(url)
+        pr = fetch_pr(check_url(url))
         X = live_features(pr)
         result = self.explainer.explain(X)
 
