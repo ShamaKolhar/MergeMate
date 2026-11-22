@@ -40,12 +40,13 @@ PROMPT = ChatPromptTemplate.from_messages([
 
 
 class Coach:
-    def __init__(self):
+    def __init__(self, llm_model=LLM_MODEL):
         emb = HuggingFaceEmbeddings(model_name=EMBED_MODEL,
                                     encode_kwargs={"normalize_embeddings": True})
         self.store = Chroma(collection_name="guidelines", persist_directory=INDEX_DIR,
                             embedding_function=emb)
-        self.chain = PROMPT | ChatAnthropic(model=LLM_MODEL, max_tokens=3000)
+        self.llm_model = llm_model
+        self.chain = PROMPT | ChatAnthropic(model=llm_model, max_tokens=3000)
 
     def retrieve(self, repo, title):
         chunks, seen = [], set()
@@ -76,7 +77,8 @@ class Coach:
         if isinstance(content, list):   # thinking + text blocks: keep only the text
             content = "".join(b.get("text", "") for b in content
                               if isinstance(b, dict) and b.get("type") == "text")
-        return {"advice": content, "n_rule_chunks": len(rules)}
+        return {"advice": content, "n_rule_chunks": len(rules),
+                "rules": rules, "usage": reply.usage_metadata}
 
 
 if __name__ == "__main__":

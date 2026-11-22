@@ -1,0 +1,980 @@
+repo,question,covered,found,reason,passages,my_covered,my_found
+celestiaorg/celestia-node,"requirements for a pull request: checklist, description, linked issue",True,True,"File lists PR requirements (title format, changelog, rebase, pre-merge checklist); passages 1-3 contain these, though the issue-first requirement is missing.","[1] #### Merging Pull Requests  
+It is also our convention that authors merge their own pull requests, when possible. External contributors may not have the necessary permissions to do this, in which case, a member of the core team will merge the pull request once it's been approved.  
+Before merging a pull request:  
+- Ensure pull branch is up-to-date with a recent `main` (GitHub won't let you merge without this!)
+- Run `make test` to ensure that all tests pass
+- Ensure that all other CI checks pass / are green
+- [Squash](https://stackoverflow.com/questions/5189560/squash-my-last-x-commits-together-using-git) merge pull request
+
+[2] ### Development Procedure  
+The latest state of development is on `main`, which must never fail `make test`. *Never* force push `main`.  
+To begin contributing, create a development branch on your fork.  
+Make changes, and before submitting a pull request, update the `CHANGELOG_PENDING.md` to record your change. Also, `git
+rebase` on top of the latest `main`.  
+Sometimes (often!) pull requests get out-of-date with main, as other people merge different pull requests to main. It is
+our convention that pull request authors are responsible for updating their branches with `main`. (This also means that you shouldn't update someone else's branch for them; even if it seems like you're doing them a favor, you may be interfering with their git flow in some way!)  
+#### Merging Pull Requests
+
+[3] ## PR Naming  
+PR titles follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) and the subject must start with exactly one review level tag:  
+```txt
+type(pkg): [level] concise title
+```  
+**Example:**  
+```txt
+fix(service/header): [medium] remove race in core_listener
+```  
+Use `!` for breaking changes (e.g. `feat(nodebuilder)!: [high] rename config field`).  
+- `[high]`: Deep review for consensus, state transitions, security, or other changes with significant risk. Examples: DAS/availability verification, shrex/p2p protocol changes, header verification, fraud proofs, state/tx submission, breaking API/config changes.
+- `[medium]`: Standard review for code changes with limited impact and well-understood behavior.",,
+celestiaorg/celestia-node,are tests required for changes,True,True,"Passage 2 states the testing expectation: add or check a TestType_Method test when adding or removing a function, and run make test.","[1] ### Development Procedure  
+The latest state of development is on `main`, which must never fail `make test`. *Never* force push `main`.  
+To begin contributing, create a development branch on your fork.  
+Make changes, and before submitting a pull request, update the `CHANGELOG_PENDING.md` to record your change. Also, `git
+rebase` on top of the latest `main`.  
+Sometimes (often!) pull requests get out-of-date with main, as other people merge different pull requests to main. It is
+our convention that pull request authors are responsible for updating their branches with `main`. (This also means that you shouldn't update someone else's branch for them; even if it seems like you're doing them a favor, you may be interfering with their git flow in some way!)  
+#### Merging Pull Requests
+
+[2] ## Testing  
+### Unit tests  
+Unit tests are located in `_test.go` files as directed by [the Go testing
+package](https://golang.org/pkg/testing/). If you're adding or removing a
+function, please check there's a `TestType_Method` test for it.  
+Run: `make test`
+
+[3] - `[medium]`: Standard review for code changes with limited impact and well-understood behavior.
+- `[low]`: Focused review for straightforward docs, tests, or tooling changes with low risk.  
+Choose the higher level when unsure. A small diff can still need deep review. CI checks the title format; reviewers should confirm the chosen level. Dependabot titles default to `[medium]`; maintainers should confirm the level. The [required review policy](.github/review-policy.md) documents how the tier sets the number of independent approvals.",,
+celestiaorg/celestia-node,commit message and pull request title format,True,True,"The file documents PR title format (type(pkg): [level] title) and commit style; passage 3 contains the PR Naming format, which answers the PR title part.","[1] #### Merging Pull Requests  
+It is also our convention that authors merge their own pull requests, when possible. External contributors may not have the necessary permissions to do this, in which case, a member of the core team will merge the pull request once it's been approved.  
+Before merging a pull request:  
+- Ensure pull branch is up-to-date with a recent `main` (GitHub won't let you merge without this!)
+- Run `make test` to ensure that all tests pass
+- Ensure that all other CI checks pass / are green
+- [Squash](https://stackoverflow.com/questions/5189560/squash-my-last-x-commits-together-using-git) merge pull request
+
+[2] ### Development Procedure  
+The latest state of development is on `main`, which must never fail `make test`. *Never* force push `main`.  
+To begin contributing, create a development branch on your fork.  
+Make changes, and before submitting a pull request, update the `CHANGELOG_PENDING.md` to record your change. Also, `git
+rebase` on top of the latest `main`.  
+Sometimes (often!) pull requests get out-of-date with main, as other people merge different pull requests to main. It is
+our convention that pull request authors are responsible for updating their branches with `main`. (This also means that you shouldn't update someone else's branch for them; even if it seems like you're doing them a favor, you may be interfering with their git flow in some way!)  
+#### Merging Pull Requests
+
+[3] ## PR Naming  
+PR titles follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) and the subject must start with exactly one review level tag:  
+```txt
+type(pkg): [level] concise title
+```  
+**Example:**  
+```txt
+fix(service/header): [medium] remove race in core_listener
+```  
+Use `!` for breaking changes (e.g. `feat(nodebuilder)!: [high] rename config field`).  
+- `[high]`: Deep review for consensus, state transitions, security, or other changes with significant risk. Examples: DAS/availability verification, shrex/p2p protocol changes, header verification, fraud proofs, state/tx submission, breaking API/config changes.
+- `[medium]`: Standard review for code changes with limited impact and well-understood behavior.",,
+celestiaorg/celestia-node,"changelog, documentation and code style requirements",True,True,"Changelog requirement (update CHANGELOG_PENDING.md) is in the file and passage 2; documentation and code style are largely absent, so the answer is only partial.","[1] will indicate their support with a heartfelt emoji.  
+When the problem is well understood but the solution leads to large structural
+changes to the code base, these changes should be proposed in the form of an
+[Architectural Decision Record (ADR)](./docs/adr/). The ADR will help
+build consensus on an overall strategy to ensure the code base maintains
+coherence in the larger context. If you are not comfortable with writing an
+ADR, you can open a less-formal issue and the maintainers will help you turn it
+into an ADR.  
+> How to pick a number for the ADR?  
+Find the largest existing ADR number and bump it by 1.  
+Each stage of the process is aimed at creating feedback cycles which align contributors and maintainers to make sure:
+
+[2] ### Development Procedure  
+The latest state of development is on `main`, which must never fail `make test`. *Never* force push `main`.  
+To begin contributing, create a development branch on your fork.  
+Make changes, and before submitting a pull request, update the `CHANGELOG_PENDING.md` to record your change. Also, `git
+rebase` on top of the latest `main`.  
+Sometimes (often!) pull requests get out-of-date with main, as other people merge different pull requests to main. It is
+our convention that pull request authors are responsible for updating their branches with `main`. (This also means that you shouldn't update someone else's branch for them; even if it seems like you're doing them a favor, you may be interfering with their git flow in some way!)  
+#### Merging Pull Requests
+
+[3] ## PR Naming  
+PR titles follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) and the subject must start with exactly one review level tag:  
+```txt
+type(pkg): [level] concise title
+```  
+**Example:**  
+```txt
+fix(service/header): [medium] remove race in core_listener
+```  
+Use `!` for breaking changes (e.g. `feat(nodebuilder)!: [high] rename config field`).  
+- `[high]`: Deep review for consensus, state transitions, security, or other changes with significant risk. Examples: DAS/availability verification, shrex/p2p protocol changes, header verification, fraud proofs, state/tx submission, breaking API/config changes.
+- `[medium]`: Standard review for code changes with limited impact and well-understood behavior.",,
+syself/cluster-api-provider-hetzner,"requirements for a pull request: checklist, description, linked issue",True,True,"The file lists PR requirements (draft mode, title prefix, tests, docs, make verify); passages 1 and 3 contain them, though no checklist or linked-issue rule exists.","[1] - ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+- 🐛 (`:bug:`, patch and bugfixes)
+- 📖 (`:book:`, documentation or proposals)
+- 🌱 (`:seedling:`, minor or other)
+2. If the PR requires additional action from users switching to a new release, include the string ""action required"" in the PR release-notes.
+3. All code changes must be covered by unit tests and E2E tests.
+4. All new features should come with user documentation.
+5. Before finishing up your PR and requesting a final review, use `make verify` and `make test` to check whether your code complies with all of our standards and ensures that no unit tests fail.
+
+[2] ## Finding Things That Need Help  
+If you're new to the project and want to help, but don't know where to start, we have a semi-curated list of issues that should not need deep knowledge of the system. [Have a look and see if anything sounds interesting](https://github.com/syself/cluster-api-provider-hetzner/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).  
+Alternatively, read some of the docs on other controllers and try to write your own, file and fix any/all issues that come up, including gaps in documentation!  
+Help and contributions are very welcome in the form of code contributions but also in helping to moderate office hours, triaging issues, fixing/investigating flaky tests, cutting releases, helping new contributors with their questions, reviewing proposals, etc.
+
+[3] ## Contributing a Patch  
+1. If working on an issue, signal other contributors that you are actively working on it by commenting on it. Wait for approval in form of someone assigning you to the issue.
+2. Fork the desired repo, develop and test your code changes.
+1. See the [Development Guide](https://syself.com/docs/caph/developers/development-guide) for more instructions on setting up your environment and testing changes locally.
+3. Submit a pull request.
+1. All code PR must be created in ""draft mode"". This helps other contributors by not blocking E2E tests, which cannot run in parallel. After your PR is approved, you can mark it ""ready for review"".
+1.  All code PR must be have a title starting with one of
+- ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)",,
+syself/cluster-api-provider-hetzner,are tests required for changes,True,True,The file says all code changes must be covered by unit and E2E tests; passage 1 includes that exact statement.,"[1] - ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+- 🐛 (`:bug:`, patch and bugfixes)
+- 📖 (`:book:`, documentation or proposals)
+- 🌱 (`:seedling:`, minor or other)
+2. If the PR requires additional action from users switching to a new release, include the string ""action required"" in the PR release-notes.
+3. All code changes must be covered by unit tests and E2E tests.
+4. All new features should come with user documentation.
+5. Before finishing up your PR and requesting a final review, use `make verify` and `make test` to check whether your code complies with all of our standards and ensures that no unit tests fail.
+
+[2] ## Contributing a Patch  
+1. If working on an issue, signal other contributors that you are actively working on it by commenting on it. Wait for approval in form of someone assigning you to the issue.
+2. Fork the desired repo, develop and test your code changes.
+1. See the [Development Guide](https://syself.com/docs/caph/developers/development-guide) for more instructions on setting up your environment and testing changes locally.
+3. Submit a pull request.
+1. All code PR must be created in ""draft mode"". This helps other contributors by not blocking E2E tests, which cannot run in parallel. After your PR is approved, you can mark it ""ready for review"".
+1.  All code PR must be have a title starting with one of
+- ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+
+[3] 4. Once the PR has been reviewed and is ready to be merged, commits should be [squashed](https://github.com/kubernetes/community/blob/master/contributors/guide/github-workflow.md#squash-commits).
+1. Ensure that commit message(s) are be meaningful and commit history is readable.  
+All changes must be code reviewed. Coding conventions and standards are explained in the official [developer docs](https://github.com/kubernetes/community/tree/master/contributors/devel). Expect reviewers to request that you avoid common [go style mistakes](https://github.com/golang/go/wiki/CodeReviewComments) in your PRs.  
+In case you want to run our E2E tests locally, please refer to [Testing](https://syself.com/docs/caph/developers/development-guide#submitting-prs-and-testing) guide.",,
+syself/cluster-api-provider-hetzner,commit message and pull request title format,True,True,"The file says PR titles must start with an emoji prefix and commit messages should be meaningful. Passages 2 and 3 give the title emojis, and passage 1 the commit guidance.","[1] 4. Once the PR has been reviewed and is ready to be merged, commits should be [squashed](https://github.com/kubernetes/community/blob/master/contributors/guide/github-workflow.md#squash-commits).
+1. Ensure that commit message(s) are be meaningful and commit history is readable.  
+All changes must be code reviewed. Coding conventions and standards are explained in the official [developer docs](https://github.com/kubernetes/community/tree/master/contributors/devel). Expect reviewers to request that you avoid common [go style mistakes](https://github.com/golang/go/wiki/CodeReviewComments) in your PRs.  
+In case you want to run our E2E tests locally, please refer to [Testing](https://syself.com/docs/caph/developers/development-guide#submitting-prs-and-testing) guide.
+
+[2] - ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+- 🐛 (`:bug:`, patch and bugfixes)
+- 📖 (`:book:`, documentation or proposals)
+- 🌱 (`:seedling:`, minor or other)
+2. If the PR requires additional action from users switching to a new release, include the string ""action required"" in the PR release-notes.
+3. All code changes must be covered by unit tests and E2E tests.
+4. All new features should come with user documentation.
+5. Before finishing up your PR and requesting a final review, use `make verify` and `make test` to check whether your code complies with all of our standards and ensures that no unit tests fail.
+
+[3] ## Contributing a Patch  
+1. If working on an issue, signal other contributors that you are actively working on it by commenting on it. Wait for approval in form of someone assigning you to the issue.
+2. Fork the desired repo, develop and test your code changes.
+1. See the [Development Guide](https://syself.com/docs/caph/developers/development-guide) for more instructions on setting up your environment and testing changes locally.
+3. Submit a pull request.
+1. All code PR must be created in ""draft mode"". This helps other contributors by not blocking E2E tests, which cannot run in parallel. After your PR is approved, you can mark it ""ready for review"".
+1.  All code PR must be have a title starting with one of
+- ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)",,
+syself/cluster-api-provider-hetzner,"changelog, documentation and code style requirements",True,True,"Passage 1 gives release-notes rules, user documentation for new features, and `make verify` for standards. It omits the Go style link, but covers most.","[1] - ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+- 🐛 (`:bug:`, patch and bugfixes)
+- 📖 (`:book:`, documentation or proposals)
+- 🌱 (`:seedling:`, minor or other)
+2. If the PR requires additional action from users switching to a new release, include the string ""action required"" in the PR release-notes.
+3. All code changes must be covered by unit tests and E2E tests.
+4. All new features should come with user documentation.
+5. Before finishing up your PR and requesting a final review, use `make verify` and `make test` to check whether your code complies with all of our standards and ensures that no unit tests fail.
+
+[2] ## Contributing a Patch  
+1. If working on an issue, signal other contributors that you are actively working on it by commenting on it. Wait for approval in form of someone assigning you to the issue.
+2. Fork the desired repo, develop and test your code changes.
+1. See the [Development Guide](https://syself.com/docs/caph/developers/development-guide) for more instructions on setting up your environment and testing changes locally.
+3. Submit a pull request.
+1. All code PR must be created in ""draft mode"". This helps other contributors by not blocking E2E tests, which cannot run in parallel. After your PR is approved, you can mark it ""ready for review"".
+1.  All code PR must be have a title starting with one of
+- ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+
+[3] ## Finding Things That Need Help  
+If you're new to the project and want to help, but don't know where to start, we have a semi-curated list of issues that should not need deep knowledge of the system. [Have a look and see if anything sounds interesting](https://github.com/syself/cluster-api-provider-hetzner/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).  
+Alternatively, read some of the docs on other controllers and try to write your own, file and fix any/all issues that come up, including gaps in documentation!  
+Help and contributions are very welcome in the form of code contributions but also in helping to moderate office hours, triaging issues, fixing/investigating flaky tests, cutting releases, helping new contributors with their questions, reviewing proposals, etc.",,
+triplea-game/triplea,"requirements for a pull request: checklist, description, linked issue",False,False,"File lists PR guidelines (CI, screenshots, small focused PRs) but says nothing about a checklist, description template, or linked issue.","[1] ### PR Merge Guidelines
+At least one code reviewer must:
+- try out any functional changes
+- do a thorough code check
+Before merge:
+- all comments questions should be answered/addressed
+
+[2] ## Things to watch out for - Compatibility Breakers
+There are three ares to be concerned about compatibility:
+1. Save game serialization. Elements of `GameData.java` are serialized to a file
+and then loaded again. Private variable changes here can break things. To test this,
+save a game file, make changes, then verify that the save game can be loaded.
+1. Network: a custom variant of RMI (remote method invocation) is used. To test
+this, start a game without any changes, host. Then in another instance, make
+changes, launch, and connect to the host and play the game through to a combat round.
+That should test most functionality to verify network compatibility
+1. Map XML loading: most of this is now explicit and is less brittle. After making updates,
+
+[3] Contributions are really welcome. See the [dev-setup](/docs/development/README.md)
+for more information on how to get started, guidelines and conventions.",,
+triplea-game/triplea,are tests required for changes,True,True,"The file says contributors must test changes (manually, automated favored); Passage 1 states this testing responsibility directly.","[1] ## Testing Responsibility
+Each contributor should test their changes thoroughly. We wish to minimize
+problems when it comes time for releases. The goal is small, incremental,
+and solid changes.  
+TripleA lacks automated testing and the manual testing overhead is large.
+For now the manual testing needs to be done to ensure we keep a solid
+codebase going forward.  
+Automated tests are hugely welcome, TripleA needs lots more so that the
+manual testing can be reduced and changes made with confidence.
+
+[2] - Favor adding automated testing, it's a key missing component to TripleA, getting our test
+coverage up is critical for us to move quickly in TripleA, and we are a long ways away and have
+too much to do and spend too much time on overhead and manual testing.
+- Keep changes focused, try to have one purpose behind any PR. For example split bug fixes from refactoring
+- Favor PRs that are short and easy to review, under two hundred lines
+- PRs should not stay open for a long time, if they are not merge-ready, or will not be within a few
+days, close and re-open them when they are ready.
+
+[3] # Submitting a PR and Code Review
+- See the [Compile and Launch section of the Readme](/docs/development/README.md#compile-and-launch-triplea-cli) to see how
+run verification and tests locally.
+- Typically most PRs will not be reviewed until they pass the travis CI build.
+Comment in your PR if you wish for a preview review to be done to get high level feedback.
+- UI changes should ideally include screenshots, this helps the larger community preview
+the changes, lots of non-developers are TripleA experts and can use this to provide helpful feedback.
+The screenshots help technical reviewers know what has been changed.
+- Favor adding automated testing, it's a key missing component to TripleA, getting our test",,
+triplea-game/triplea,commit message and pull request title format,False,False,"The CONTRIBUTING file has no commit message or PR title format guidance; it covers PR size, review and merge but not title or message conventions.","[1] ### PR Merge Guidelines
+At least one code reviewer must:
+- try out any functional changes
+- do a thorough code check
+Before merge:
+- all comments questions should be answered/addressed
+
+[2] Contributions are really welcome. See the [dev-setup](/docs/development/README.md)
+for more information on how to get started, guidelines and conventions.
+
+[3] 1. Map XML loading: most of this is now explicit and is less brittle. After making updates,
+load several maps to verify that map XML 'attachments' can be mapped to game code without
+problems.",,
+triplea-game/triplea,"changelog, documentation and code style requirements",False,False,"The CONTRIBUTING file says nothing about changelog, documentation or code style requirements; it covers testing, compatibility and PR process only.","[1] ### PR Merge Guidelines
+At least one code reviewer must:
+- try out any functional changes
+- do a thorough code check
+Before merge:
+- all comments questions should be answered/addressed
+
+[2] Contributions are really welcome. See the [dev-setup](/docs/development/README.md)
+for more information on how to get started, guidelines and conventions.
+
+[3] # Submitting a PR and Code Review
+- See the [Compile and Launch section of the Readme](/docs/development/README.md#compile-and-launch-triplea-cli) to see how
+run verification and tests locally.
+- Typically most PRs will not be reviewed until they pass the travis CI build.
+Comment in your PR if you wish for a preview review to be done to get high level feedback.
+- UI changes should ideally include screenshots, this helps the larger community preview
+the changes, lots of non-developers are TripleA experts and can use this to provide helpful feedback.
+The screenshots help technical reviewers know what has been changed.
+- Favor adding automated testing, it's a key missing component to TripleA, getting our test",,
+apache/fory,"requirements for a pull request: checklist, description, linked issue",True,True,"File gives PR requirements (title, benchmark data in description, AI checklist); passages 2 and 3 include these, though there is no linked-issue rule.","[1] ## Testing  
+For environmental requirements, see the [Development guide](./docs/development/index.md).
+
+[2] ## How to title your PR  
+Generally we follow the [Conventional Commits](https://www.conventionalcommits.org/) for pull request titles,
+since we will squash and merge the PR and use the PR title as the first line of commit message.  
+For example, here are good PR titles:  
+- feat(java): support xxx feature
+- fix(c++): blablabla
+- chore(python): remove useless yyy file  
+If the submitted PR affects the performance of Apache Fory™, we strongly recommend using the perf type,
+and need to provide benchmark data in the PR description. For how to run the benchmark,
+please check [Apache Fory™ Java Benchmark](https://github.com/apache/fory/blob/main/benchmarks/java/README.md).  
+For more details, please check [pr-lint.yml](./.github/workflows/pr-lint.yml).
+
+[3] - For substantial AI assistance, provide privacy-safe disclosure in the PR using the [AI Contribution Checklist](./AI_POLICY.md#9-contributor-checklist-for-ai-assisted-prs) template. Minor/narrow AI assistance does not require full disclosure.
+- Include adequate human verification evidence (for example exact build/lint/test commands and pass/fail outcomes), and add/update tests and specs where required.
+- For protocol/type-mapping/wire-format or performance-sensitive changes, provide the required compatibility/performance validation evidence.
+- Ensure licensing and provenance compliance with [ASF Generative Tooling Guidance](https://www.apache.org/legal/generative-tooling.html) and do not submit content with uncertain provenance.",,
+apache/fory,are tests required for changes,True,True,File says to add/update tests where required and show test evidence; passage 2 contains that bullet.,"[1] ## Testing  
+For environmental requirements, see the [Development guide](./docs/development/index.md).
+
+[2] - For substantial AI assistance, provide privacy-safe disclosure in the PR using the [AI Contribution Checklist](./AI_POLICY.md#9-contributor-checklist-for-ai-assisted-prs) template. Minor/narrow AI assistance does not require full disclosure.
+- Include adequate human verification evidence (for example exact build/lint/test commands and pass/fail outcomes), and add/update tests and specs where required.
+- For protocol/type-mapping/wire-format or performance-sensitive changes, provide the required compatibility/performance validation evidence.
+- Ensure licensing and provenance compliance with [ASF Generative Tooling Guidance](https://www.apache.org/legal/generative-tooling.html) and do not submit content with uncertain provenance.
+
+[3] ### Rust  
+```bash
+cd rust
+cargo test
+# run test with specific test file and method
+cargo test -p tests  --test $test_file $test_method
+# run specific test under subdirectory
+cargo test --test mod $dir$::$test_file::$test_method
+# debug specific test under subdirectory and get backtrace
+RUST_BACKTRACE=1 FORY_PANIC_ON_ERROR=1 cargo test --test mod $dir$::$test_file::$test_method
+```",,
+apache/fory,commit message and pull request title format,True,True,"The 'How to title your PR' section explains Conventional Commits PR titles, squash-merge into the commit message, and examples; passage 1 contains it.","[1] ## How to title your PR  
+Generally we follow the [Conventional Commits](https://www.conventionalcommits.org/) for pull request titles,
+since we will squash and merge the PR and use the PR title as the first line of commit message.  
+For example, here are good PR titles:  
+- feat(java): support xxx feature
+- fix(c++): blablabla
+- chore(python): remove useless yyy file  
+If the submitted PR affects the performance of Apache Fory™, we strongly recommend using the perf type,
+and need to provide benchmark data in the PR description. For how to run the benchmark,
+please check [Apache Fory™ Java Benchmark](https://github.com/apache/fory/blob/main/benchmarks/java/README.md).  
+For more details, please check [pr-lint.yml](./.github/workflows/pr-lint.yml).
+
+[2] ### C++  
+```bash
+pip install clang-format==18.1.8
+git ls-files -- '*.cc' '*.h' | xargs -P 5 clang-format -i
+```
+
+[3] ## Code Style  
+Run all checks: `bash ci/format.sh --all`.",,
+apache/fory,"changelog, documentation and code style requirements",True,True,"The file covers code style (format.sh, Java spotless/checkstyle) and only briefly docs; no changelog info. Passages 2 and 3 contain the code style part.","[1] ## Testing  
+For environmental requirements, see the [Development guide](./docs/development/index.md).
+
+[2] ## Code Style  
+Run all checks: `bash ci/format.sh --all`.
+
+[3] ### Java  
+```bash
+cd java
+# code format
+mvn spotless:apply
+# code format check
+mvn spotless:check
+mvn checkstyle:check
+```",,
+gitkraken/vscode-gitlens,"requirements for a pull request: checklist, description, linked issue",True,True,"The file's PR section says to follow the PR template, and passage 1 contains that section; the checklist details are only in the external template.","[1] ## Submitting a Pull Request  
+Please follow all the instructions in the [PR template](.github/PULL_REQUEST_TEMPLATE.md).
+
+[2] In order to see any code changes reflected in the ""Extension Development Host"" window, you will need to restart the debug session, e.g. using the ""Restart"" button in the debug toolbar or by pressing `[Ctrl|Cmd]+Shift+F5`. Although, if the code changes are purely within a webview, you can refresh the webview by clicking the refresh button in the toolbar associated with the webview.  
+_Note: If you see a pop-up with a message similar to ""The task cannot be tracked. Make sure to have a problem matcher defined."", you will need to install the [TypeScript + Webpack Problem Matchers](https://marketplace.visualstudio.com/items?itemName=amodio.tsl-problem-matcher) extension._  
+#### Using VS Code (desktop webworker)  
+1. Open the `vscode-gitlens` folder
+
+[3] ## Your First Code Contribution  
+Unsure where to begin contributing? You can start by looking through the [`help-wanted`](https://github.com/gitkraken/vscode-gitlens/labels/help-wanted) issues.",,
+gitkraken/vscode-gitlens,are tests required for changes,False,False,"The file explains how to write and run tests and gives best practices, but never says tests are required for changes.","[1] In order to see any code changes reflected in the ""Extension Development Host"" window, you will need to restart the debug session, e.g. using the ""Restart"" button in the debug toolbar or by pressing `[Ctrl|Cmd]+Shift+F5`. Although, if the code changes are purely within a webview, you can refresh the webview by clicking the refresh button in the toolbar associated with the webview.  
+_Note: If you see a pop-up with a message similar to ""The task cannot be tracked. Make sure to have a problem matcher defined."", you will need to install the [TypeScript + Webpack Problem Matchers](https://marketplace.visualstudio.com/items?itemName=amodio.tsl-problem-matcher) extension._  
+#### Using VS Code (desktop webworker)  
+1. Open the `vscode-gitlens` folder
+
+[2] >
+> Changed
+>
+> - Changes or improves an existing feature &mdash; closes [#\<issue\>](https://github.com/gitkraken/vscode-gitlens/issues/<issue>) thanks to [PR #\<pr\>](https://github.com/gitkraken/vscode-gitlens/issues/<pr>) by Your Name ([@\<your-github-username\>](https://github.com/<your-github-username>))
+>
+> Fixed
+>
+> - Fixes [#\<issue\>](https://github.com/gitkraken/vscode-gitlens/issues/<issue>) a bug or regression &mdash; thanks to [PR #\<pr\>](https://github.com/gitkraken/vscode-gitlens/issues/<pr>) by Your Name ([@\<your-github-username\>](https://github.com/<your-github-username>))
+
+[3] ### Test Best Practices  
+- **Co-locate tests**: Place tests in `__tests__/` directories next to the code they test
+- **Descriptive names**: Use clear test names that describe what is being tested
+- **Test behavior**: Focus on testing behavior and outputs, not implementation details
+- **Edge cases**: Always test edge cases, empty inputs, and error conditions
+- **Mock dependencies**: Use mocks for external dependencies (VS Code API, file system, etc.)
+- **Keep tests fast**: Unit tests should run quickly; use mocks to avoid slow operations",,
+gitkraken/vscode-gitlens,commit message and pull request title format,False,False,The CONTRIBUTING file has no commit message or PR title format guidance. It only references a PR template and a release bump commit message.,"[1] ## Submitting a Pull Request  
+Please follow all the instructions in the [PR template](.github/PULL_REQUEST_TEMPLATE.md).
+
+[2] 2. Ensure the [CHANGELOG.md](CHANGELOG.md) has been updated with the release notes
+3. Run `pnpm run prep-release` and enter the desired `{major}.{minor}.{patch}` version when prompted
+4. Review the `Bumps to v{major}.{minor}.{patch}` commit
+5. Run `git push --follow-tags` to push the commit and tag  
+Pushing the `v{major}.{minor}.{patch}` tag will trigger the [Publish Stable workflow](.github/workflows/cd-stable.yml) to automatically package the extension, create a [GitHub release](https://github.com/gitkraken/vscode-gitlens/releases/latest), and deploy it to the [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens).
+
+[3] 3. Cherry-pick the desired commits from `main` into the `release/{major}.{minor}` branch
+4. Follow steps 2-5 in [Preparing a Normal Release](#preparing-a-normal-release) above
+5. Manually update the [CHANGELOG.md](CHANGELOG.md) on `main` with the patch release notes  
+Note: All patch releases for the same `{major}.{minor}` version use the same `release/{major}.{minor}` branch",,
+gitkraken/vscode-gitlens,"changelog, documentation and code style requirements",True,False,"The file covers changelog, README updates, and formatting/linting rules. The passages only include the changelog section, missing documentation and code style.","[1] ### Update the CHANGELOG  
+The [Change Log](CHANGELOG.md) is updated manually and an entry should be added for each change. Changes are grouped in lists by `added`, `changed`, `removed`, or `fixed`.  
+Entries should be written in future tense:  
+- Be sure to give yourself much deserved credit by adding your name and user in the entry  
+> Added
+>
+> - Adds awesome feature &mdash; closes [#\<issue\>](https://github.com/gitkraken/vscode-gitlens/issues/<issue>) thanks to [PR #\<pr\>](https://github.com/gitkraken/vscode-gitlens/issues/<pr>) by Your Name ([@\<your-github-username\>](https://github.com/<your-github-username>))
+>
+> Changed
+>
+
+[2] In order to see any code changes reflected in the ""Extension Development Host"" window, you will need to restart the debug session, e.g. using the ""Restart"" button in the debug toolbar or by pressing `[Ctrl|Cmd]+Shift+F5`. Although, if the code changes are purely within a webview, you can refresh the webview by clicking the refresh button in the toolbar associated with the webview.  
+_Note: If you see a pop-up with a message similar to ""The task cannot be tracked. Make sure to have a problem matcher defined."", you will need to install the [TypeScript + Webpack Problem Matchers](https://marketplace.visualstudio.com/items?itemName=amodio.tsl-problem-matcher) extension._  
+#### Using VS Code (desktop webworker)  
+1. Open the `vscode-gitlens` folder
+
+[3] In order to see any code changes reflected in the ""Extension Development Host"" window, you will need to restart the debug session, e.g. using the ""Restart"" button in the debug toolbar or by pressing `[Ctrl|Cmd]+Shift+F5`. Although, if the code changes are purely within a webview, you can refresh the webview by clicking the refresh button in the toolbar associated with the webview.  
+#### Using VS Code for the Web (locally)  
+See https://code.visualstudio.com/api/extension-guides/web-extensions#test-your-web-extension-in-a-browser-using-vscodetestweb  
+1. Open the `vscode-gitlens` folder
+2. Ensure the required [dependencies](#dependencies) are installed
+3. Run the `build` or `watch` task from the command palette
+4. Run the `Run (local web)` task from the command palette",,
+wxt-dev/wxt,"requirements for a pull request: checklist, description, linked issue",True,False,The file requires human-written PR descriptions and an issue or discussion first for new features. The passages cover only PR title format and maintainers.,"[1] ## Conventional Commits & PR Titles  
+This project uses [Conventional Commit format](https://www.conventionalcommits.org/en/v1.0.0/) to automatically generate a changelog and better understand the changes in the project. The title of your pull request should also follow this format, as it will be used as the squashed commit message when merged into the main branch, and ultimately used to generate the changelog for each release.  
+Here are some examples of conventional commit messages:  
+- `feat: add new functionality`
+- `fix: add optional chaining`
+- `chore: fixed typos in code`
+- `docs: updated list of features on homepage`
+
+[2] ## Become a Maintainer  
+If you're interested in becoming a maintainer, send an email to Aaron at <aaronklinker1@gmail.com> with your github username saying you're interested. The process is very informal, I will add you quickly if you've contributed code or answered questions and helped out the community!  
+Maintainers don't have to just write code - they can manage issues, answer questions, review PRs, organize and prioritize work - there's lots of ways for you to help out.
+
+[3] - `chore: fixed typos in code`
+- `docs: updated list of features on homepage`  
+Allowed types are `feat`, `fix`, `perf`, `refactor`, `docs`, `chore`, `ci`, `build`, `style`, and `revert`. The `test` type is **not** allowed: use the type of the change the tests support instead (e.g. `fix(wxt): ...` for a bug-fix's tests, or `chore: ...` for test-only cleanups). PRs with an invalid title will fail the ""Check PR Title"" CI job.",,
+wxt-dev/wxt,are tests required for changes,True,True,"The Testing section says to update or add tests when making changes, if tests exist; passage 1 contains this.","[1] ## Testing  
+WXT has unit and E2E tests. When making a change or adding a feature, make sure to update the tests or add new ones, if they exist.  
+> If they don't exist, feel free to create them, but that's a lot for a one-time contributor. A maintainer might add them to your PR though.  
+To run tests for a specific file, add the filename at the end of the test command:  
+```sh
+bun run --filter wxt test manifest-contents
+```  
+All test (unit and E2E) for all packages are ran together via [Vitest workspaces](https://vitest.dev/guide/#workspaces-support).  
+If you want to manually test a change, you can modify the demo project for your test, but please don't leave those changes committed once you open a PR.
+
+[2] - `chore: fixed typos in code`
+- `docs: updated list of features on homepage`  
+Allowed types are `feat`, `fix`, `perf`, `refactor`, `docs`, `chore`, `ci`, `build`, `style`, and `revert`. The `test` type is **not** allowed: use the type of the change the tests support instead (e.g. `fix(wxt): ...` for a bug-fix's tests, or `chore: ...` for test-only cleanups). PRs with an invalid title will fail the ""Check PR Title"" CI job.
+
+[3] ## Breaking Changes Policy  
+A quick word on WXT's breaking changes policy. I am willing to make breaking changes, but they have to be for a good enough reason - they have to make WXT better as a whole, they can't be based on one opinion.  
+Breaking changes also require a major release. Major releases have happened once or twice a year, so after you merge your PR, you'll have to wait a little bit before it is released.  
+To make a breaking change:  
+1. Make sure you're PR is targeting the `major` branch
+2. Add `!` after the conventional commit type (`fix!: ...`, `feat!: ...`, `chore!: ...`, etc) to indicate that it is a breaking change",,
+wxt-dev/wxt,commit message and pull request title format,True,True,"The file specifies Conventional Commit format for commits and PR titles; passages 1 and 2 together state the format, examples, and allowed types.","[1] ## Conventional Commits & PR Titles  
+This project uses [Conventional Commit format](https://www.conventionalcommits.org/en/v1.0.0/) to automatically generate a changelog and better understand the changes in the project. The title of your pull request should also follow this format, as it will be used as the squashed commit message when merged into the main branch, and ultimately used to generate the changelog for each release.  
+Here are some examples of conventional commit messages:  
+- `feat: add new functionality`
+- `fix: add optional chaining`
+- `chore: fixed typos in code`
+- `docs: updated list of features on homepage`
+
+[2] - `chore: fixed typos in code`
+- `docs: updated list of features on homepage`  
+Allowed types are `feat`, `fix`, `perf`, `refactor`, `docs`, `chore`, `ci`, `build`, `style`, and `revert`. The `test` type is **not** allowed: use the type of the change the tests support instead (e.g. `fix(wxt): ...` for a bug-fix's tests, or `chore: ...` for test-only cleanups). PRs with an invalid title will fail the ""Check PR Title"" CI job.
+
+[3] ## Releasing Updates  
+Releases are done with GitHub actions:  
+- Use the [Release workflow](https://github.com/wxt-dev/wxt/actions/workflows/release.yml) to release a single package in the monorepo. This automatically detects the version change with conventional commits, builds and uploads the package to NPM, and creates a GitHub release.
+- Use the [Sync Releases workflow](https://github.com/wxt-dev/wxt/actions/workflows/sync-releases.yml) to sync the GitHub releases with changes to the changelog. To change a release, update the `CHANGELOG.md` file and run the workflow. It will sync the releases of a single package in the monorepo.",,
+wxt-dev/wxt,"changelog, documentation and code style requirements",True,True,"Changelog (conventional commits) and docs (VitePress/JSDoc) are covered and present in passages; the file has no code style rules, so nothing is missed.","[1] ## Conventional Commits & PR Titles  
+This project uses [Conventional Commit format](https://www.conventionalcommits.org/en/v1.0.0/) to automatically generate a changelog and better understand the changes in the project. The title of your pull request should also follow this format, as it will be used as the squashed commit message when merged into the main branch, and ultimately used to generate the changelog for each release.  
+Here are some examples of conventional commit messages:  
+- `feat: add new functionality`
+- `fix: add optional chaining`
+- `chore: fixed typos in code`
+- `docs: updated list of features on homepage`
+
+[2] - `chore: fixed typos in code`
+- `docs: updated list of features on homepage`  
+Allowed types are `feat`, `fix`, `perf`, `refactor`, `docs`, `chore`, `ci`, `build`, `style`, and `revert`. The `test` type is **not** allowed: use the type of the change the tests support instead (e.g. `fix(wxt): ...` for a bug-fix's tests, or `chore: ...` for test-only cleanups). PRs with an invalid title will fail the ""Check PR Title"" CI job.
+
+[3] ## Updating Docs  
+Documentation is written with [VitePress](https://vitepress.dev/guide/getting-started), and is located in the `docs/` directory.  
+The API reference is generated from JSDoc comments in the source code. If there's a typo or change you want to make in there, you'll need to update the source code instead of a file in the `docs/` directory.",,
+OWASP/Nest,"requirements for a pull request: checklist, description, linked issue",False,False,"The file gives general PR rules (assignment, checks, target branch) but nothing on a PR checklist, description, or linked-issue requirement.","[1] ### 1. Find Something to Work On  
+- Check the **Issues** tab for open issues: [https://github.com/OWASP/Nest/issues](https://github.com/OWASP/Nest/issues)
+- Found a bug or have a feature request? Open a new issue.
+- Want to work on an existing issue? Ask the maintainers to assign it to you before submitting a pull request.
+- New to the project? Start with issues labeled `good first issue` for an easier onboarding experience.
+
+[2] ### 5. Open a Pull Request  
+- Submit a **Pull Request (PR)** to the `main` branch.
+- Your PR will trigger CI/CD pipelines that run automated checks and tests.
+
+[3] ### 3. Make Changes and Commit  
+- Check that your commits include only related and intended changes. Do not include unrelated files.
+- Follow best practices for code style and testing.
+- Add tests for any new functionality or changes to ensure proper coverage.
+- Run the code quality checks and tests:  
+```bash
+make check-test
+```  
+If you changed the GraphQL schema or frontend GraphQL operations, also run `make graphql-codegen` with Nest application running (see [GraphQL types](#graphql-types)).  
+- Write meaningful commit messages:  
+```bash
+git commit -m ""Add feature: short description""
+```",,
+OWASP/Nest,are tests required for changes,True,True,"The file requires tests for new functionality and changes; passages 1 and 2 state this (add tests, maintain coverage).","[1] ### Test Coverage  
+- There is a **minimum test coverage requirement** for the **backend** code -- see [pyproject.toml](https://github.com/OWASP/Nest/blob/main/backend/pyproject.toml).
+- There is a **minimum test coverage requirement** for the **frontend** code -- see [jest.config.ts](https://github.com/OWASP/Nest/blob/main/frontend/jest.config.ts).
+- Ensure your changes do not drop the overall test coverage percentage.  
+If you are adding new functionality, include relevant test cases.  
+---
+
+[2] ### 3. Make Changes and Commit  
+- Check that your commits include only related and intended changes. Do not include unrelated files.
+- Follow best practices for code style and testing.
+- Add tests for any new functionality or changes to ensure proper coverage.
+- Run the code quality checks and tests:  
+```bash
+make check-test
+```  
+If you changed the GraphQL schema or frontend GraphQL operations, also run `make graphql-codegen` with Nest application running (see [GraphQL types](#graphql-types)).  
+- Write meaningful commit messages:  
+```bash
+git commit -m ""Add feature: short description""
+```
+
+[3] PushChanges --> HasPR{PR Exists?}
+HasPR -->|No| CreateDraftPR[Create Draft PR]
+HasPR -->|Yes| WaitAutoChecks[**Wait for Automated<br/>Checks to Finish**]
+CreateDraftPR --> WaitAutoChecks
+
+WaitAutoChecks --> CheckAutoTools{All **CodeRabbit and <br/>SonarQube** Comments<br/>Resolved?}
+CheckAutoTools -->|No| MarkDraft[Make Sure PR Is **Marked as a Draft**]
+CheckAutoTools -->|Yes| MarkReady[Mark PR as Ready<br/>for Review]
+MarkDraft --> WP2[ ]
+WP2 -.-> ResolveIssue
+
+MarkReady --> RequestReview[Request Review from<br/>Project Maintainers]
+RequestReview --> WaitMaintainer[Wait for Maintainers'<br/>Comments]
+
+WaitMaintainer --> HasMaintainerComments{**Maintainers' Comments<br/>Resolved**?}
+HasMaintainerComments -->|No| MarkDraft
+HasMaintainerComments -->|Yes| CheckCI{**CI/CD<br/>Passing?**}",,
+OWASP/Nest,commit message and pull request title format,True,True,"The file only says to write meaningful commit messages, with example 'Add feature: short description'; no PR title format. Passage 1 contains this commit guidance.","[1] ### 3. Make Changes and Commit  
+- Check that your commits include only related and intended changes. Do not include unrelated files.
+- Follow best practices for code style and testing.
+- Add tests for any new functionality or changes to ensure proper coverage.
+- Run the code quality checks and tests:  
+```bash
+make check-test
+```  
+If you changed the GraphQL schema or frontend GraphQL operations, also run `make graphql-codegen` with Nest application running (see [GraphQL types](#graphql-types)).  
+- Write meaningful commit messages:  
+```bash
+git commit -m ""Add feature: short description""
+```
+
+[2] ### 5. Open a Pull Request  
+- Submit a **Pull Request (PR)** to the `main` branch.
+- Your PR will trigger CI/CD pipelines that run automated checks and tests.
+
+[3] ### 4. Push Changes  
+- Push your branch to the repository:  
+```bash
+git push origin feature/my-feature-name
+```",,
+OWASP/Nest,"changelog, documentation and code style requirements",True,True,"File covers code style checks (Prettier, ESLint) and docs tooling but has no changelog info; passages 1 and 2 give the code style part.","[1] ### 3. Make Changes and Commit  
+- Check that your commits include only related and intended changes. Do not include unrelated files.
+- Follow best practices for code style and testing.
+- Add tests for any new functionality or changes to ensure proper coverage.
+- Run the code quality checks and tests:  
+```bash
+make check-test
+```  
+If you changed the GraphQL schema or frontend GraphQL operations, also run `make graphql-codegen` with Nest application running (see [GraphQL types](#graphql-types)).  
+- Write meaningful commit messages:  
+```bash
+git commit -m ""Add feature: short description""
+```
+
+[2] ## Code Quality Checks  
+Nest enforces code quality standards to ensure consistency and maintainability. You can run automated checks locally before pushing your changes:  
+```bash
+make check
+```  
+This command runs static analysis only (no tests, no running application). Checks run inside the `nest-code-checks` Docker image (built on first use), so host Node, Python, pre-commit, Terraform, and TFLint installs are not required. It runs:  
+1. **Pre-commit** — repository hooks (formatting, linting, and other configured checks)
+2. **Prettier** — formatting for repository source files covered by `.prettierignore` (read-only; see [Prettier](#prettier))
+3. **ESLint** — lint for `e2e/` and `frontend/` (read-only; see [ESLint](#eslint))
+4. **CSpell** — checks spelling over the repository
+
+[3] ### 2. Create a Branch  
+Always create a feature branch for your work:  
+```bash
+git checkout -b feature/my-feature-name
+```",,
+NVIDIA-NeMo/Automodel,"requirements for a pull request: checklist, description, linked issue",False,False,"The CONTRIBUTING file has no PR checklist, description, or linked-issue requirements. It covers setup, linting, tests, docs and sign-off only.","[1] ## Python annotation coverage  
+Every pull request, including documentation-only changes, runs the **Python type
+coverage** workflow. Open its **Python annotation coverage** job summary for
+package-wide and per-area coverage, plus changes from the PR's merge-base.
+The same report is printed in the **Report annotation coverage** step's log.
+The `type-coverage` artifact contains the summary and JSON with per-function
+annotations and exclusion reasons.  
+Raw coverage counts signatures with all parameters and the return annotated.
+Strict coverage also excludes `Any`, `object`, nullable unions (`T | None` and
+`Optional[T]`), `None` parameter defaults, bare generics, `Callable[..., T]`,
+casts, type-checker suppressions, and `no_type_check`. A return of `-> None`
+
+[2] casts, type-checker suppressions, and `no_type_check`. A return of `-> None`
+counts as typed. These conservative exclusions can include valid contracts;
+the metric measures annotation syntax, not type soundness. Signature and local
+variable annotations, module-local aliases, and quoted annotations are inspected;
+cross-module aliases and inferred types are not resolved.  
+The report includes tracked Python source under `nemo_automodel/`, including
+nested functions, kernels, and vendored code. It excludes tests and examples.
+It reports coverage without enforcing a minimum. Run it locally with Python
+3.11 or newer; no package dependencies are needed:  
+```bash
+python tools/type_coverage.py --head HEAD --base origin/main --output-dir /tmp/type-coverage
+```
+
+[3] ## Recipe checks  
+Before pushing example recipe or recipe CI changes, run:  
+```bash
+git fetch origin main
+uv run --script tools/recipes/check_recipes.py
+```  
+This is the same entry point used by recipe CI. It checks example YAMLs,
+nightly recipe references, every CI folder/scope combination, and required
+`ci:` metadata on added recipes. It installs only PyYAML and ruamel.yaml in an
+isolated Python 3.12 environment; no training stack or GPUs are needed.  
+By default, added recipes are detected against the merge base of `origin/main`
+and `HEAD`, including staged, unstaged, and untracked additions. Use
+`--base-ref <ref>` for a different base. For a committed PR range, pass
+`--base-ref <base-sha> --head-ref <head-sha>`; this excludes uncommitted additions",,
+NVIDIA-NeMo/Automodel,are tests required for changes,False,False,"The file covers test runtime limits, GPU shards and docs-tool tests, but never says whether tests are required for code changes.","[1] Keep model shapes small and avoid downloads or unnecessary compilation. Tests
+that consistently need more than the effective budget should be optimized or moved to
+functional tests. An exact `@pytest.mark.runtime_budget(...)` may tighten the
+limit, but cannot raise it for a new or modified test. A changed test with a
+marker above 30 seconds stops collection with a usage error; update its marker
+and optimize the test, or move it to functional coverage. Existing larger allowances
+retain their hard watchdog on unrelated changes; they do not impose a runtime
+gate on those changes. The configured default hard watchdog is 70 seconds,
+enforced at 210 seconds. The same multiplier applies once to resolved pytest
+timeout markers and CLI, environment, or ini timeout settings, preserving their
+
+[2] Use a full Git checkout with `origin/main` available; the check fetches archived
+documentation from `docs-archive` through `origin`.  
+The command validates documentation sources, generates model-coverage
+tables, restores archived pages, and validates MDX and Fern configuration.
+Generated tables and styles are cleaned up after validation, including on
+failure. A nonzero exit status identifies a failed check.  
+Publishing uses `uv run --script tools/docs/check_docs.py --keep-generated` to retain
+validated model-coverage tables for deployment. Failures still clean them up.  
+Validation rules and generation scripts live in `tools/docs/` (see its
+[layout guide](tools/docs/README.md)). Pytest tests under
+`tests/unit_tests/tools/docs/` mirror the `checks/`, `build/`, and `assets/`
+
+[3] ## Unit-test runtime  
+Unit-test time limits are enforced at **three times the configured value** to
+allow for CI load. The configured default runtime budget is 30 seconds, so new
+and modified tests have an effective 90-second budget, including setup, the test
+body, and teardown. A configured 15-second marker allows 45 seconds. If every
+phase passes but the test exceeds its effective budget, pytest runs it once more
+in the same worker with fresh function-scoped
+fixtures. Shared fixtures and compiler caches can remain warm. Both attempts
+must exceed the budget to fail the runtime gate; assertion failures, fixture
+errors, and hard timeouts are never retried. A warning records every confirmation.  
+Keep model shapes small and avoid downloads or unnecessary compilation. Tests",,
+NVIDIA-NeMo/Automodel,commit message and pull request title format,False,False,The file only requires sign-off on commits and shows an example message like 'build: Adding dependencies'. It states no commit message or PR title format.,"[1] ## Signing Your Work  
+* We require that all contributors ""sign-off"" on their commits. This certifies that the contribution is your original work, or you have rights to submit it under the same license, or a compatible license.  
+* Any contribution which contains commits that are not Signed-Off will not be accepted.  
+* To sign off on a commit you simply use the `--signoff` (or `-s`) option when committing your changes:  
+```bash
+git commit -s -m ""Add cool feature.""
+```  
+This will append the following to your commit message:  
+```
+Signed-off-by: Your Name <your@email.com>
+```  
+* Full text of the DCO:  
+```
+Developer Certificate of Origin
+Version 1.1
+
+Copyright (C) 2004, 2006 The Linux Foundation and its contributors.
+
+[2] ## Pre-commit  
+We recommand to use [prek](https://github.com/j178/prek) to ensure code quality. It is a faster and more modern alternative to [pre-commit](https://github.com/pre-commit/pre-commit).  
+Installation:  
+```bash
+uv tool install prek
+```  
+Usage:  
+```bash
+# Install git hooks
+prek install
+
+# Run manually on all files
+prek run --all-files
+```  
+After installing the git hooks, `git commit` will automatically run incremental checks.
+
+[3] ## Python annotation coverage  
+Every pull request, including documentation-only changes, runs the **Python type
+coverage** workflow. Open its **Python annotation coverage** job summary for
+package-wide and per-area coverage, plus changes from the PR's merge-base.
+The same report is printed in the **Report annotation coverage** step's log.
+The `type-coverage` artifact contains the summary and JSON with per-function
+annotations and exclusion reasons.  
+Raw coverage counts signatures with all parameters and the return annotated.
+Strict coverage also excludes `Any`, `object`, nullable unions (`T | None` and
+`Optional[T]`), `None` parameter defaults, bare generics, `Callable[..., T]`,
+casts, type-checker suppressions, and `no_type_check`. A return of `-> None`",,
+NVIDIA-NeMo/Automodel,"changelog, documentation and code style requirements",True,True,"The file covers docs requirements and code style (coding guidelines, ruff) but has no changelog section; passages 1-3 cover docs, style and linting, so the answerable parts are found.","[1] ## Adding Documentation  
+Before pushing documentation changes, run the same check used by CI from the
+repository root:  
+```bash
+uv run --script tools/docs/check_docs.py
+```  
+`tools/docs/check_docs.py` is the only docs-check entry point for contributors,
+agents, and CI. Add validation steps to that tool to keep local checks and CI
+in sync. The existing `make -C docs/fern docs-check` and `docs-mdx-check`
+targets forward to it.  
+Install `uv`, Node.js 20 (including `npm`/`npx`), Git, and `make` first. The
+script creates an isolated Python 3.12 environment with only the docs test
+dependencies and uses the Fern CLI version pinned in `docs/fern/fern.config.json`.
+Use a full Git checkout with `origin/main` available; the check fetches archived
+
+[2] # Contributing To NeMo-Automodel  
+## Coding guidelines  
+Follow the [coding guidelines](CODING_GUIDELINES.md) when adding or modifying code.
+Existing code is being refactored incrementally and may not yet comply. Agents
+must also follow [AGENTS.md](AGENTS.md) and applicable contributor skills.
+
+[3] ## Linting and Formatting  
+We use [ruff](https://docs.astral.sh/ruff/) for linting and formatting.  
+Installation:  
+```bash
+pip install ruff
+```  
+Format:  
+```bash
+ruff check --fix .
+ruff format .
+```  
+Ruff does not cover every rule we enforce. `tools/lint_no_globals.py` rejects `globals()`
+and its equivalents (module-scope `vars()`, `sys.modules[__name__].__dict__`,
+`setattr(sys.modules[__name__], ...)`). These are usually used to swap a module-level
+function so that another function picks up the replacement — a process-wide mutation that
+changes behavior for every concurrent or nested caller. Pass the collaborator in, or expose
+a method subclasses can override, instead. The one exception is the PEP 562 lazy-import",,
+TraceMachina/nativelink,"requirements for a pull request: checklist, description, linked issue",False,False,"The file covers PR creation steps, commit style and a required AI-assistance template section, but says nothing on a PR checklist, description or linked-issue requirements.","[1] ### Creating pull requests  
+NativeLink doesn't allow direct commits or human-created side branches in the
+`TraceMachina/nativelink` repository. This holds for contributors in the
+`TraceMachina` organization. To create a pull request:  
+1. Ensure that your personal fork is up-to-date with upstream:  
+```bash
+git switch main  # Switch to your local main branch
+git pull -r upstream main  # Fetch upstream and rebase your current branch
+# against upstream's main branch
+git push  # Push your updated main to your own fork
+```  
+> [!TIP]
+> Use `git log` to check that your branches are in order:
+>
+> ```bash
+> # A `git log` should look like this:
+> commit ... (HEAD -> main, upstream/main, origin/main, origin/HEAD)
+> ...
+> ```  
+2. Create a new branch for the change you want to make:  
+```bash
+
+[2] for your pull request green.  
+7. If you need to make additional changes, don't use a regular `git commit` on
+the pull request branch. Instead use `git commit --amend` and `git push -f`
+to update the commit in-place. The changes between the commit versions will
+remain visible in the Reviewable UI.
+
+[3] # Bad - commit should be split
+Add some feature and actually some other feature as well
+```  
+4. Push your commit with `git push`. This will prompt you to set a remote branch
+for the commit:  
+```bash
+git push --set-upstream origin some-feature
+```  
+5. Go to https://github.com/TraceMachina/nativelink/pulls where you should see a
+button that you can click to create a new pull request from your
+fork to the main repository.  
+6. Once you opened the pull request, click on the purple `Reviewable` button in
+the GitHub page for the pull request to add reviewers with `+@somereviewer`.  
+The reviewers will take it from there and guide you through any potential
+remaining issues. Feel free to ask for help if you have trouble getting CI
+for your pull request green.",,
+TraceMachina/nativelink,are tests required for changes,False,False,"The file never says tests are required for changes; it only mentions CI, pre-commit checks and running doctests, so the passages can't answer it either.","[1] for your pull request green.  
+7. If you need to make additional changes, don't use a regular `git commit` on
+the pull request branch. Instead use `git commit --amend` and `git push -f`
+to update the commit in-place. The changes between the commit versions will
+remain visible in the Reviewable UI.
+
+[2] it and you reworked it, an agent wrote it and you reviewed every line.
+""None"" is a complete answer. The section is required, and the PR template
+check asks for it.
+3. **No slop.** Unreviewed generated code, generated issue or discussion text
+that no person edited, and generated media (artwork, video, audio) are
+closed without review. Write issues and comments in your own voice;
+generated prose runs long, sounds confident, and often misses the point.
+Repeated submissions of this kind cost the ability to contribute.
+4. **Agents follow `AGENTS.md`.** It maps the repository, names the checks,
+and says which document must follow which change. An agent working here
+runs the same checks a person would before opening a pull request, and
+never opens one on its own initiative.
+
+[3] never opens one on its own initiative.  
+Maintainers use agents at their discretion; the difference is that they have
+already shown they understand the code. None of this is an anti-AI stance.
+Review attention is the scarcest resource an open project has, and generated
+text made it cheap to produce contributions that look finished and are not.
+The rules keep the reviewer's time for changes a person is answerable for.  
+Everything the repository offers an agent (the `llms.txt` files at the
+repository root and the skills under `.claude/skills/`) is listed at
+https://nativelink.com/agents and in [`AGENTS.md`](AGENTS.md).",,
+TraceMachina/nativelink,commit message and pull request title format,True,True,"File gives commit title/body rules; passage 1 includes the body line-length rule and a 'Good' example, partially answering commit format.","[1] - The commit message body should have a maximum line length of 72 characters.
+This is to keep the `git log` readable with raw terminals.  
+```bash
+# Good.
+Add some feature
+
+[2] for your pull request green.  
+7. If you need to make additional changes, don't use a regular `git commit` on
+the pull request branch. Instead use `git commit --amend` and `git push -f`
+to update the commit in-place. The changes between the commit versions will
+remain visible in the Reviewable UI.
+
+[3] [gpg]
+format = ssh  # Or gpg if you use a GPG key.
+
+[commit]
+gpgsign = true
+
+[tag]
+gpgsign = true
+```",,
+TraceMachina/nativelink,"changelog, documentation and code style requirements",True,False,"The file covers changelog (git-cliff), docs style (Microsoft Style Guide, Vale) and code formatting (rustfmt, pre-commit). The passages miss Vale, rustfmt and the changelog steps.","[1] ## Creating releases  
+To keep the release process in line with best practices for open source
+repositories, not all steps are automated. Specifically, tags should be signed
+and pushed manually and the release notes should be human readable beyond what
+most automatically generated changelogs provide.  
+1. Bump the current version in the following files:  
+- `MODULE.bazel`
+- `Cargo.toml`
+- The `Cargo.toml` of every `nativelink-*` crate — including nested ones
+like `nativelink-metric/nativelink-metric-macro-derive/Cargo.toml` —
+and the regenerated lock files (`Cargo.lock`,
+`nativelink-test/fuzz/Cargo.lock`)  
+As a sanity check, a standard release touches 17 files.  
+2. Update the changelog by prepending the new release section to the existing
+
+[2] Attribute every entry to its author. Keep the same category headings as the
+changelog and write each line as `<summary> by @author in (#PR) - (short-sha)`,
+then close the notes with a `New Contributors` section and a `Full Changelog`
+link. To pull the author list and first-time contributors for the range, run:  
+```bash
+gh api -X POST repos/TraceMachina/nativelink/releases/generate-notes \
+-f tag_name=v1.x.y -f previous_tag_name=v1.x.z
+```  
+Fold that output into the categorized notes rather than pasting it verbatim,
+since the changelog groups commits by type.  
+Make sure to include migration instructions for all breaking changes.  
+Explicitly list whatever changes you think are worth mentioning as `Major
+changes`. This is a fairly free-form section that doesn't have any explicit
+
+[3] style rules are documented on the site itself under
+Contribute → [Working on documentation](https://docs.nativelink.com/contribute/docs)
+— which is also the page to update if this workflow changes.  
+The configuration reference pages under
+`web/apps/docs/content/docs/reference/nativelink-config/` are autogenerated
+from the Rust config crate — don't edit them by hand; regenerate with
+`pnpm run --filter @nativelink/docs gen:config-reference` from `web/`.",,
+lambdaclass/ethrex,"requirements for a pull request: checklist, description, linked issue",True,True,"Passage 2 states to fill in the PR template and link related issues, and to use a descriptive title; the file has no stricter checklist.","[1] ## Pull Request Naming Rules  
+All PR titles must follow the enforced semantic format:  
+`<type>(<scope>[,<scope2>,...]): <subject>`  
+- **Allowed types:** `feat`, `fix`, `perf`, `refactor`, `revert`, `deps`, `build`, `ci`, `test`, `style`, `chore`, `docs`
+- **Allowed scopes:** `l1`, `l2`, `levm` (multiple scopes can be used, separated by commas)
+- **Scope(s) are required**
+- **Subject must not start with an uppercase character**  
+**Examples:**
+- `fix(l1,levm): handle edge case in snap sync`
+- `docs(l2): update documentation for L2`  
+An exclamation mark may be added before the colon to indicate breaking changes, for example `perf(l1)!: change database schema`  
+PRs not following this convention will fail automated checks.
+
+[2] ## How to Submit a Pull Request  
+1. Fork the repository and create your branch from `main`.
+2. Make your changes, following the code style guidelines below.
+3. Run tests locally to ensure nothing is broken.
+4. Open a pull request with a descriptive title (see PR naming rules below).
+5. Fill in the PR template if available, and link related issues.
+
+[3] ## Issue Reporting  
+- Use GitHub Issues to report bugs or request features.
+- Include steps to reproduce, expected behavior, and environment details.",,
+lambdaclass/ethrex,are tests required for changes,True,True,"The file says to run tests locally to ensure nothing is broken; passage 3 contains this step, though it doesn't strictly require adding tests.","[1] ## Review Process  
+- All PRs require review and approval by multiple maintainers.
+- You may be asked to make changes before merging.
+- Automated checks must pass before merge.
+
+[2] ## Pull Request Naming Rules  
+All PR titles must follow the enforced semantic format:  
+`<type>(<scope>[,<scope2>,...]): <subject>`  
+- **Allowed types:** `feat`, `fix`, `perf`, `refactor`, `revert`, `deps`, `build`, `ci`, `test`, `style`, `chore`, `docs`
+- **Allowed scopes:** `l1`, `l2`, `levm` (multiple scopes can be used, separated by commas)
+- **Scope(s) are required**
+- **Subject must not start with an uppercase character**  
+**Examples:**
+- `fix(l1,levm): handle edge case in snap sync`
+- `docs(l2): update documentation for L2`  
+An exclamation mark may be added before the colon to indicate breaking changes, for example `perf(l1)!: change database schema`  
+PRs not following this convention will fail automated checks.
+
+[3] ## How to Submit a Pull Request  
+1. Fork the repository and create your branch from `main`.
+2. Make your changes, following the code style guidelines below.
+3. Run tests locally to ensure nothing is broken.
+4. Open a pull request with a descriptive title (see PR naming rules below).
+5. Fill in the PR template if available, and link related issues.",,
+lambdaclass/ethrex,commit message and pull request title format,True,True,"The file defines the PR title format (type(scope): subject), and passage 2 contains it in full. It gives no separate commit message format, only signing rules.","[1] ## How to Submit a Pull Request  
+1. Fork the repository and create your branch from `main`.
+2. Make your changes, following the code style guidelines below.
+3. Run tests locally to ensure nothing is broken.
+4. Open a pull request with a descriptive title (see PR naming rules below).
+5. Fill in the PR template if available, and link related issues.
+
+[2] ## Pull Request Naming Rules  
+All PR titles must follow the enforced semantic format:  
+`<type>(<scope>[,<scope2>,...]): <subject>`  
+- **Allowed types:** `feat`, `fix`, `perf`, `refactor`, `revert`, `deps`, `build`, `ci`, `test`, `style`, `chore`, `docs`
+- **Allowed scopes:** `l1`, `l2`, `levm` (multiple scopes can be used, separated by commas)
+- **Scope(s) are required**
+- **Subject must not start with an uppercase character**  
+**Examples:**
+- `fix(l1,levm): handle edge case in snap sync`
+- `docs(l2): update documentation for L2`  
+An exclamation mark may be added before the colon to indicate breaking changes, for example `perf(l1)!: change database schema`  
+PRs not following this convention will fail automated checks.
+
+[3] ## Issue Reporting  
+- Use GitHub Issues to report bugs or request features.
+- Include steps to reproduce, expected behavior, and environment details.",,
+lambdaclass/ethrex,"changelog, documentation and code style requirements",False,False,"The file has no changelog requirements or code style guidelines (only a vague 'code style guidelines below' reference), and documentation is only a pointer to other docs.","[1] ## Pull Request Naming Rules  
+All PR titles must follow the enforced semantic format:  
+`<type>(<scope>[,<scope2>,...]): <subject>`  
+- **Allowed types:** `feat`, `fix`, `perf`, `refactor`, `revert`, `deps`, `build`, `ci`, `test`, `style`, `chore`, `docs`
+- **Allowed scopes:** `l1`, `l2`, `levm` (multiple scopes can be used, separated by commas)
+- **Scope(s) are required**
+- **Subject must not start with an uppercase character**  
+**Examples:**
+- `fix(l1,levm): handle edge case in snap sync`
+- `docs(l2): update documentation for L2`  
+An exclamation mark may be added before the colon to indicate breaking changes, for example `perf(l1)!: change database schema`  
+PRs not following this convention will fail automated checks.
+
+[2] ## Issue Reporting  
+- Use GitHub Issues to report bugs or request features.
+- Include steps to reproduce, expected behavior, and environment details.
+
+[3] ## Developer Documentation  
+For detailed guides, architecture, and API references, see the [Developer Docs](docs/developers/README.md).",,

@@ -1,0 +1,231 @@
+kind,link,question_or_bullet,passages,judge,my_label
+retrieval,https://github.com/syself/cluster-api-provider-hetzner,"changelog, documentation and code style requirements","[1] - ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+- 🐛 (`:bug:`, patch and bugfixes)
+- 📖 (`:book:`, documentation or proposals)
+- 🌱 (`:seedling:`, minor or other)
+2. If the PR requires additional action from users switching to a new release, include the string ""action required"" in the PR release-notes.
+3. All code changes must be covered by unit tests and E2E tests.
+4. All new features should come with user documentation.
+5. Before finishing up your PR and requesting a final review, use `make verify` and `make test` to check whether your code complies with all of our standards and ensures that no unit tests fail.
+
+[2] ## Contributing a Patch  
+1. If working on an issue, signal other contributors that you are actively working on it by commenting on it. Wait for approval in form of someone assigning you to the issue.
+2. Fork the desired repo, develop and test your code changes.
+1. See the [Development Guide](https://syself.com/docs/caph/developers/development-guide) for more instructions on setting up your environment and testing changes locally.
+3. Submit a pull request.
+1. All code PR must be created in ""draft mode"". This helps other contributors by not blocking E2E tests, which cannot run in parallel. After your PR is approved, you can mark it ""ready for review"".
+1.  All code PR must be have a title starting with one of
+- ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+
+[3] ## Finding Things That Need Help  
+If you're new to the project and want to help, but don't know where to start, we have a semi-curated list of issues that should not need deep knowledge of the system. [Have a look and see if anything sounds interesting](https://github.com/syself/cluster-api-provider-hetzner/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).  
+Alternatively, read some of the docs on other controllers and try to write your own, file and fix any/all issues that come up, including gaps in documentation!  
+Help and contributions are very welcome in the form of code contributions but also in helping to moderate office hours, triaging issues, fixing/investigating flaky tests, cutting releases, helping new contributors with their questions, reviewing proposals, etc.",True,True
+retrieval,https://github.com/celestiaorg/celestia-node,are tests required for changes,"[1] ### Development Procedure  
+The latest state of development is on `main`, which must never fail `make test`. *Never* force push `main`.  
+To begin contributing, create a development branch on your fork.  
+Make changes, and before submitting a pull request, update the `CHANGELOG_PENDING.md` to record your change. Also, `git
+rebase` on top of the latest `main`.  
+Sometimes (often!) pull requests get out-of-date with main, as other people merge different pull requests to main. It is
+our convention that pull request authors are responsible for updating their branches with `main`. (This also means that you shouldn't update someone else's branch for them; even if it seems like you're doing them a favor, you may be interfering with their git flow in some way!)  
+#### Merging Pull Requests
+
+[2] ## Testing  
+### Unit tests  
+Unit tests are located in `_test.go` files as directed by [the Go testing
+package](https://golang.org/pkg/testing/). If you're adding or removing a
+function, please check there's a `TestType_Method` test for it.  
+Run: `make test`
+
+[3] - `[medium]`: Standard review for code changes with limited impact and well-understood behavior.
+- `[low]`: Focused review for straightforward docs, tests, or tooling changes with low risk.  
+Choose the higher level when unsure. A small diff can still need deep review. CI checks the title format; reviewers should confirm the chosen level. Dependabot titles default to `[medium]`; maintainers should confirm the level. The [required review policy](.github/review-policy.md) documents how the tier sets the number of independent approvals.",True,True
+retrieval,https://github.com/gitkraken/vscode-gitlens,are tests required for changes,"[1] In order to see any code changes reflected in the ""Extension Development Host"" window, you will need to restart the debug session, e.g. using the ""Restart"" button in the debug toolbar or by pressing `[Ctrl|Cmd]+Shift+F5`. Although, if the code changes are purely within a webview, you can refresh the webview by clicking the refresh button in the toolbar associated with the webview.  
+_Note: If you see a pop-up with a message similar to ""The task cannot be tracked. Make sure to have a problem matcher defined."", you will need to install the [TypeScript + Webpack Problem Matchers](https://marketplace.visualstudio.com/items?itemName=amodio.tsl-problem-matcher) extension._  
+#### Using VS Code (desktop webworker)  
+1. Open the `vscode-gitlens` folder
+
+[2] >
+> Changed
+>
+> - Changes or improves an existing feature &mdash; closes [#\<issue\>](https://github.com/gitkraken/vscode-gitlens/issues/<issue>) thanks to [PR #\<pr\>](https://github.com/gitkraken/vscode-gitlens/issues/<pr>) by Your Name ([@\<your-github-username\>](https://github.com/<your-github-username>))
+>
+> Fixed
+>
+> - Fixes [#\<issue\>](https://github.com/gitkraken/vscode-gitlens/issues/<issue>) a bug or regression &mdash; thanks to [PR #\<pr\>](https://github.com/gitkraken/vscode-gitlens/issues/<pr>) by Your Name ([@\<your-github-username\>](https://github.com/<your-github-username>))
+
+[3] ### Test Best Practices  
+- **Co-locate tests**: Place tests in `__tests__/` directories next to the code they test
+- **Descriptive names**: Use clear test names that describe what is being tested
+- **Test behavior**: Focus on testing behavior and outputs, not implementation details
+- **Edge cases**: Always test edge cases, empty inputs, and error conditions
+- **Mock dependencies**: Use mocks for external dependencies (VS Code API, file system, etc.)
+- **Keep tests fast**: Unit tests should run quickly; use mocks to avoid slow operations",False,False
+retrieval,https://github.com/apache/fory,"changelog, documentation and code style requirements","[1] ## Testing  
+For environmental requirements, see the [Development guide](./docs/development/index.md).
+
+[2] ## Code Style  
+Run all checks: `bash ci/format.sh --all`.
+
+[3] ### Java  
+```bash
+cd java
+# code format
+mvn spotless:apply
+# code format check
+mvn spotless:check
+mvn checkstyle:check
+```",True,True
+retrieval,https://github.com/apache/fory,commit message and pull request title format,"[1] ## How to title your PR  
+Generally we follow the [Conventional Commits](https://www.conventionalcommits.org/) for pull request titles,
+since we will squash and merge the PR and use the PR title as the first line of commit message.  
+For example, here are good PR titles:  
+- feat(java): support xxx feature
+- fix(c++): blablabla
+- chore(python): remove useless yyy file  
+If the submitted PR affects the performance of Apache Fory™, we strongly recommend using the perf type,
+and need to provide benchmark data in the PR description. For how to run the benchmark,
+please check [Apache Fory™ Java Benchmark](https://github.com/apache/fory/blob/main/benchmarks/java/README.md).  
+For more details, please check [pr-lint.yml](./.github/workflows/pr-lint.yml).
+
+[2] ### C++  
+```bash
+pip install clang-format==18.1.8
+git ls-files -- '*.cc' '*.h' | xargs -P 5 clang-format -i
+```
+
+[3] ## Code Style  
+Run all checks: `bash ci/format.sh --all`.",True,True
+retrieval,https://github.com/triplea-game/triplea,"requirements for a pull request: checklist, description, linked issue","[1] ### PR Merge Guidelines
+At least one code reviewer must:
+- try out any functional changes
+- do a thorough code check
+Before merge:
+- all comments questions should be answered/addressed
+
+[2] ## Things to watch out for - Compatibility Breakers
+There are three ares to be concerned about compatibility:
+1. Save game serialization. Elements of `GameData.java` are serialized to a file
+and then loaded again. Private variable changes here can break things. To test this,
+save a game file, make changes, then verify that the save game can be loaded.
+1. Network: a custom variant of RMI (remote method invocation) is used. To test
+this, start a game without any changes, host. Then in another instance, make
+changes, launch, and connect to the host and play the game through to a combat round.
+That should test most functionality to verify network compatibility
+1. Map XML loading: most of this is now explicit and is less brittle. After making updates,
+
+[3] Contributions are really welcome. See the [dev-setup](/docs/development/README.md)
+for more information on how to get started, guidelines and conventions.",False,False
+retrieval,https://github.com/syself/cluster-api-provider-hetzner,commit message and pull request title format,"[1] 4. Once the PR has been reviewed and is ready to be merged, commits should be [squashed](https://github.com/kubernetes/community/blob/master/contributors/guide/github-workflow.md#squash-commits).
+1. Ensure that commit message(s) are be meaningful and commit history is readable.  
+All changes must be code reviewed. Coding conventions and standards are explained in the official [developer docs](https://github.com/kubernetes/community/tree/master/contributors/devel). Expect reviewers to request that you avoid common [go style mistakes](https://github.com/golang/go/wiki/CodeReviewComments) in your PRs.  
+In case you want to run our E2E tests locally, please refer to [Testing](https://syself.com/docs/caph/developers/development-guide#submitting-prs-and-testing) guide.
+
+[2] - ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+- 🐛 (`:bug:`, patch and bugfixes)
+- 📖 (`:book:`, documentation or proposals)
+- 🌱 (`:seedling:`, minor or other)
+2. If the PR requires additional action from users switching to a new release, include the string ""action required"" in the PR release-notes.
+3. All code changes must be covered by unit tests and E2E tests.
+4. All new features should come with user documentation.
+5. Before finishing up your PR and requesting a final review, use `make verify` and `make test` to check whether your code complies with all of our standards and ensures that no unit tests fail.
+
+[3] ## Contributing a Patch  
+1. If working on an issue, signal other contributors that you are actively working on it by commenting on it. Wait for approval in form of someone assigning you to the issue.
+2. Fork the desired repo, develop and test your code changes.
+1. See the [Development Guide](https://syself.com/docs/caph/developers/development-guide) for more instructions on setting up your environment and testing changes locally.
+3. Submit a pull request.
+1. All code PR must be created in ""draft mode"". This helps other contributors by not blocking E2E tests, which cannot run in parallel. After your PR is approved, you can mark it ""ready for review"".
+1.  All code PR must be have a title starting with one of
+- ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)",True,True
+retrieval,https://github.com/syself/cluster-api-provider-hetzner,are tests required for changes,"[1] - ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+- 🐛 (`:bug:`, patch and bugfixes)
+- 📖 (`:book:`, documentation or proposals)
+- 🌱 (`:seedling:`, minor or other)
+2. If the PR requires additional action from users switching to a new release, include the string ""action required"" in the PR release-notes.
+3. All code changes must be covered by unit tests and E2E tests.
+4. All new features should come with user documentation.
+5. Before finishing up your PR and requesting a final review, use `make verify` and `make test` to check whether your code complies with all of our standards and ensures that no unit tests fail.
+
+[2] ## Contributing a Patch  
+1. If working on an issue, signal other contributors that you are actively working on it by commenting on it. Wait for approval in form of someone assigning you to the issue.
+2. Fork the desired repo, develop and test your code changes.
+1. See the [Development Guide](https://syself.com/docs/caph/developers/development-guide) for more instructions on setting up your environment and testing changes locally.
+3. Submit a pull request.
+1. All code PR must be created in ""draft mode"". This helps other contributors by not blocking E2E tests, which cannot run in parallel. After your PR is approved, you can mark it ""ready for review"".
+1.  All code PR must be have a title starting with one of
+- ⚠️ (`:warning:`, major or breaking changes)
+- ✨ (`:sparkles:`, feature additions)
+
+[3] 4. Once the PR has been reviewed and is ready to be merged, commits should be [squashed](https://github.com/kubernetes/community/blob/master/contributors/guide/github-workflow.md#squash-commits).
+1. Ensure that commit message(s) are be meaningful and commit history is readable.  
+All changes must be code reviewed. Coding conventions and standards are explained in the official [developer docs](https://github.com/kubernetes/community/tree/master/contributors/devel). Expect reviewers to request that you avoid common [go style mistakes](https://github.com/golang/go/wiki/CodeReviewComments) in your PRs.  
+In case you want to run our E2E tests locally, please refer to [Testing](https://syself.com/docs/caph/developers/development-guide#submitting-prs-and-testing) guide.",True,True
+retrieval,https://github.com/OWASP/Nest,"changelog, documentation and code style requirements","[1] ### 3. Make Changes and Commit  
+- Check that your commits include only related and intended changes. Do not include unrelated files.
+- Follow best practices for code style and testing.
+- Add tests for any new functionality or changes to ensure proper coverage.
+- Run the code quality checks and tests:  
+```bash
+make check-test
+```  
+If you changed the GraphQL schema or frontend GraphQL operations, also run `make graphql-codegen` with Nest application running (see [GraphQL types](#graphql-types)).  
+- Write meaningful commit messages:  
+```bash
+git commit -m ""Add feature: short description""
+```
+
+[2] ## Code Quality Checks  
+Nest enforces code quality standards to ensure consistency and maintainability. You can run automated checks locally before pushing your changes:  
+```bash
+make check
+```  
+This command runs static analysis only (no tests, no running application). Checks run inside the `nest-code-checks` Docker image (built on first use), so host Node, Python, pre-commit, Terraform, and TFLint installs are not required. It runs:  
+1. **Pre-commit** — repository hooks (formatting, linting, and other configured checks)
+2. **Prettier** — formatting for repository source files covered by `.prettierignore` (read-only; see [Prettier](#prettier))
+3. **ESLint** — lint for `e2e/` and `frontend/` (read-only; see [ESLint](#eslint))
+4. **CSpell** — checks spelling over the repository
+
+[3] ### 2. Create a Branch  
+Always create a feature branch for your work:  
+```bash
+git checkout -b feature/my-feature-name
+```",True,True
+retrieval,https://github.com/lambdaclass/ethrex,commit message and pull request title format,"[1] ## How to Submit a Pull Request  
+1. Fork the repository and create your branch from `main`.
+2. Make your changes, following the code style guidelines below.
+3. Run tests locally to ensure nothing is broken.
+4. Open a pull request with a descriptive title (see PR naming rules below).
+5. Fill in the PR template if available, and link related issues.
+
+[2] ## Pull Request Naming Rules  
+All PR titles must follow the enforced semantic format:  
+`<type>(<scope>[,<scope2>,...]): <subject>`  
+- **Allowed types:** `feat`, `fix`, `perf`, `refactor`, `revert`, `deps`, `build`, `ci`, `test`, `style`, `chore`, `docs`
+- **Allowed scopes:** `l1`, `l2`, `levm` (multiple scopes can be used, separated by commas)
+- **Scope(s) are required**
+- **Subject must not start with an uppercase character**  
+**Examples:**
+- `fix(l1,levm): handle edge case in snap sync`
+- `docs(l2): update documentation for L2`  
+An exclamation mark may be added before the colon to indicate breaking changes, for example `perf(l1)!: change database schema`  
+PRs not following this convention will fail automated checks.
+
+[3] ## Issue Reporting  
+- Use GitHub Issues to report bugs or request features.
+- Include steps to reproduce, expected behavior, and environment details.",True,True
+bullet_accurate,https://github.com/NVIDIA-NeMo/Automodel/pull/3536,"Add the Code provenance section and state ""Not applicable."" if no external code was copied. [Code provenance: ""state ""Not applicable.""""]",,True,True
+bullet_accurate,https://github.com/prefix-dev/pixi/pull/5875,"**Missing issue link and maintainer ping.** The description says an issue will be created ""soon"". Create the issue first, get a maintainer to say a PR is welcome, then add `Fixes #<issue>` and ping that maintainer. [If there's no issue yet... create one.]",,True,True
+bullet_accurate,https://github.com/orhun/git-cliff/pull/1371,"The ""Types of Changes"" box is ""Other"", but the title is `feat(...)` and the change alters which tag gets published. Confirm that ""Other"" is right, or pick ""New feature"" or ""Breaking change"" if consumers pinned to `latest` on main builds will see different behavior. [What types of changes does your code introduce?]",,True,True
+bullet_accurate,https://github.com/orhun/git-cliff/pull/1371,"Either tick the rustfmt and clippy boxes, or state that no Rust code changed so they were not run. Currently the parent items and their sub-items are all unchecked. [Contributors are expected to run the same checks locally.]",,True,True
+bullet_accurate,https://github.com/triplea-game/triplea/pull/14215,"**Add manual testing notes.** The description covers AI-driven cross-checking passes but says nothing about manual testing. State what you ran or read in practice, such as spot-checked claims or a build. [Mention any manual testing done.]",,True,False
+bullet_accurate,https://github.com/quantumlib/Cirq/pull/8187,"Check that every new line behind `preserve_moments` is covered by tests, including the `map_operations_and_unroll` path. Annotate anything that stays uncovered. [any uncovered code must be annotated with `# pragma: no cover`]",,True,True
+bullet_accurate,https://github.com/NVIDIA-NeMo/Automodel/pull/3536,"Answer the tests question with a test or a stated reason none is needed, instead of asking the reviewer whether to add one. [Pre checks: ""Did you write any new necessary tests?""]",,True,True
+bullet_accurate,https://github.com/getsentry/sentry-python/pull/6140,"**Description is thin on the ""why"" and on self-review**: It explains the change, but it doesn't say how you checked that no other references to the old tag exist. It also says you reviewed the changes, which fits the self-review requirement. Add a short note on what you searched. [The PR description is complete (what, why, and links to relevant issues)]",,False,False
+bullet_accurate,https://github.com/OWASP/Nest/pull/4515,"Run `make check-test` locally and confirm it passes, since the PR doesn't show it was run. [Run the code quality checks and tests]",,True,True
+bullet_accurate,https://github.com/getsentry/sentry-python/pull/6140,"**Linked issue may not qualify yet.** Confirm that #6121 shows a maintainer reply, not only your own opening comment. [a maintainer must have also responded]",,True,False
