@@ -11,7 +11,7 @@ class MergeMate:
         self.explainer = MergeExplainer()     # loads the model, SHAP and the calibration shift once
         self.coach = Coach()                  # loads the embedding model, Chroma and Claude once
 
-    def analyze(self, url, with_coach=True):
+    def analyze(self, url, with_coach=True, llm_model=None):
         pr = fetch_pr(url)
         X = live_features(pr)
         result = self.explainer.explain(X)
@@ -27,7 +27,7 @@ class MergeMate:
         result.update({"repo": pr["repo"], "number": pr["number"], "title": pr["title"],
                        "warnings": warnings})
         if with_coach:
-            result["coach"] = self.coach.review(pr["repo"], pr)["advice"]
+            result["coach"] = self.coach.review(pr["repo"], pr, llm_model=llm_model)["advice"]
         return result
 
 

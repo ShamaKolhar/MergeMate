@@ -45,8 +45,13 @@ class Coach:
                                     encode_kwargs={"normalize_embeddings": True})
         self.store = Chroma(collection_name="guidelines", persist_directory=INDEX_DIR,
                             embedding_function=emb)
-        self.llm_model = llm_model
-        self.chain = PROMPT | ChatAnthropic(model=llm_model, max_tokens=3000)
+        self.llm_model = llm_model                 # default model for review()
+        self._chains = {}                          # one chain per model, built when first used
+
+    def _chain(self, model):
+        if model not in self._chains:
+            self._chains[model] = PROMPT | ChatAnthropic(model=model, max_tokens=3000)
+        return self._chains[model]
 
     def retrieve(self, repo, title):
         chunks, seen = [], set()
@@ -66,11 +71,12 @@ class Coach:
                 add(d.page_content)
         return chunks
 
-    def review(self, repo, pr):
+    def review(self, repo, pr, llm_model=None):
+        model = llm_model or self.llm_model
         rules = self.retrieve(repo, pr["title"])
         files = "\n".join(f"- {f['path']} (+{f['additions']} -{f['deletions']})"
                           for f in pr["files"][:30])
-        reply = self.chain.invoke({
+        reply = self._chain(model).invoke({
             "repo": repo, "rules": "\n\n---\n\n".join(rules), "title": pr["title"],
             "body": pr["body"] or "(empty)", "n_files": len(pr["files"]), "files": files})
         content = reply.content
@@ -78,7 +84,7 @@ class Coach:
             content = "".join(b.get("text", "") for b in content
                               if isinstance(b, dict) and b.get("type") == "text")
         return {"advice": content, "n_rule_chunks": len(rules),
-                "rules": rules, "usage": reply.usage_metadata}
+                "rules": rules, "usage": reply.usage_metadata, "model": model}
 
 
 if __name__ == "__main__":
