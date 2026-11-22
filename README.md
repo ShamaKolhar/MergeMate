@@ -4,7 +4,7 @@
 
 Most people who open their first pull request to an open-source project never come back. I wanted to understand why, using real GitHub data, and then build something that could help: a model that estimates a newcomer's chance of getting merged, and a coach that checks their PR against the project's own contribution rules.
 
-> **Status:** data collection, product analytics, modelling, the final 2026 test, SHAP explanations and calibration are done. The RAG coach and the deployed app are in progress (see [Roadmap](#roadmap)).
+> **Status:** data collection, product analytics, modelling, the final 2026 test, SHAP explanations and calibration are done, and a first version of the coach works. Its evaluation and the deployed app are in progress (see [Roadmap](#roadmap)).
 
 ---
 
@@ -188,6 +188,24 @@ For a single PR, the app splits the explanation into two groups:
 
 The split is my judgement, not something the model learnt. The calibration shift moves every PR's baseline by the same amount, so it doesn't change any of these pushes. Two small rules keep the advice sensible: a docs-only PR is never told to add tests, and the hour a PR was opened is never shown, because the effect is tiny, it's in UTC, and it's unlikely to be causal.
 
+## The coach
+
+The model says *how likely* a PR is to be merged. The coach is meant to say *what to fix*, using each project's own rules rather than generic advice.
+
+**Collecting the rules.** For each of the 50 repositories I downloaded the CONTRIBUTING file and the pull request template through the GitHub API. GitHub's community profile endpoint found 47 CONTRIBUTING files; the other 3 were inherited from the organisation's shared `.github` repository, so I added a fallback that checks there. That gives 50/50 CONTRIBUTING files and 42/50 PR templates. Four CONTRIBUTING files are one-line pointers to an external website. I didn't scrape those sites; the coach will say when a project keeps few written rules on GitHub.
+
+**Indexing.** Documents are split at Markdown headings first, so sections like "Testing" and "Commit messages" stay separate, then capped at 800 characters with a 100-character overlap. That gives 1,106 chunks. Each chunk is embedded locally with `BAAI/bge-small-en-v1.5` (no API cost) and stored in Chroma with the repository name attached, so a PR is only ever checked against its own project's rules.
+
+**Retrieval.** A single search found the right section, but only one of the top three results was really about the question. Searching with the PR's own text would be worse, because contribution rules talk about process, not code. So for each PR the coach always includes the repo's full PR template (it's short, and it is the checklist), then searches the CONTRIBUTING file with four fixed reviewer questions (PR requirements, tests, commit and title format, changelog and style) plus the PR's title, and removes duplicates.
+
+**Generation.** Claude (Haiku) gets those rules and the PR's title, description and changed files, and returns up to five fixes, each quoting the rule it comes from, plus what the PR already does well. The prompt tells it to use only the project's rules and to treat the PR text as data, never as instructions.
+
+**A trap in the rules themselves.** On the first real test, a JabRef PR, the coach told the contributor to end their description with a special "policy compliance" tag and to add a paragraph comparing the PR with honey, chocolate and the moon. JabRef's PR template asks for both, labelled "required by the contribution policy". They are decoys: a person reading the template skips them, while an AI that follows it blindly adds them, which lets maintainers spot AI-written PRs. My coach would have made a human contributor look like a bot. This is indirect prompt injection, where the retrieved documents carry instructions aimed at the model.
+
+The decoy sits inside the same HTML comment as JabRef's real guidance, so stripping comments wasn't an option. A general "ignore decoys" rule in the prompt didn't work either; the model still trusted "required by policy". What worked was saying explicitly that decoys often claim to be required, and that anything unrelated to the code change, or a tag to paste, should be skipped without comment. The coach doesn't point the trap out, because that would help people get around a project's AI detection, and it still enforces JabRef's real rule that AI use must be disclosed. Because answers vary from run to run, this needs to pass repeatedly in the evaluation, not just once.
+
+**The model and the coach checked against each other.** On that same PR, both flagged missing tests. The coach also said the PR correctly links its issue, while the model had marked "links an issue" as missing. The PR wrote `Closes https://github.com/...`, and my feature's regex only matched `Closes #123`. Across the dataset, the regex misses 6.7% of PRs that GitHub shows as linked, and those merged at 57%, more than any other group. GitHub's own link count would catch them, but it includes links added after opening, which risks the same leak as `author_association`, so the model keeps the regex feature (the test set has already been used) and this is listed under limitations.
+
 ---
 
 ## What went wrong, and what I learned
@@ -195,7 +213,7 @@ The split is my judgement, not something the model learnt. The calibration shift
 - **A field that leaked the answer.** My first plan used GitHub's `author_association` to find newcomers. A quick check showed PRs labelled `NONE` were merged 0% of the time and `CONTRIBUTOR` 94% of the time. GitHub updates the label after a merge, so it was encoding the outcome. I dropped it and built the newcomer flag from PR history instead.
 - **Timeouts and hidden rate limits.** The first full collection run hit GitHub's secondary rate limit and server timeouts on 18 of 50 repos. Smaller pages, a pause between requests, and waiting for the time GitHub asks for (`retry-after`) fixed it. Pass 2 later ran with almost no errors.
 - **An effect hidden by resubmissions.** The first retention analysis said a newcomer's first experience didn't matter. Breaking down when people came back showed 64% of "returns" after a rejection happened within a day, which were mostly the same change resubmitted.
-- **A crash that wasn't my code.** LightGBM 4.7 crashed Python outright (an access violation) as soon as training started. Before switching to XGBoost I wanted to know why, so I narrowed it down: it crashed even on random data, and changing the NumPy version, the OpenMP runtime and the data types made no difference. LightGBM 4.5 failed for a different reason (incompatible with my scikit-learn version), while 4.6.0 worked. The cause was the 4.7 release itself, so I pinned `lightgbm==4.6.0`.
+- **Two crashes, one cause.** LightGBM 4.7 crashed Python outright (an access violation) as soon as training started, even on random data. Changing NumPy, the data types and the OpenMP runtime made no difference, and 4.6.0 happened to work, so at first I blamed the 4.7 release and pinned 4.6.0. A week later the vector database (Chroma) crashed in exactly the same way, across several versions, even with no other libraries loaded. Two unrelated libraries failing identically pointed at the environment. My virtual environment was built on Anaconda's Python, which loads its own older copy of Microsoft's C++ runtime (`msvcp140.dll` 14.29, while Windows had 14.51). Libraries compiled with newer Microsoft compilers crash against the older copy. I rebuilt the environment on standard Python from python.org, and both the Chroma version and LightGBM 4.7 that had crashed before then ran fine. I kept LightGBM 4.6.0 only because every result in this README was produced with it.
 - **Not tuning on the test set.** It would have been easy to keep adjusting the model after seeing the 2026 score. I tuned only on cross-validation folds, ran the test once, and reported the tie as it came out.
 - **Comparing years fairly.** Raw "still open" counts made 2026 look terrible, but recent PRs simply hadn't had as much time. Measuring every PR at exactly day 30 fixed the comparison.
 
@@ -207,6 +225,7 @@ The split is my judgement, not something the model learnt. The calibration shift
 - "Earlier PRs elsewhere" only counts PRs within these 50 repositories.
 - The retention and response-time findings are associations, not causal effects.
 - Calibration is fixed on average, but scores are still too bunched towards the middle: the weakest PRs are over-predicted and the strongest slightly under-predicted.
+- The "links an issue" feature misses full-URL links (`Closes https://...`): 6.7% of PRs that GitHub shows as linked.
 - The drift correction needs refreshing as the merge rate moves. A model left alone will drift out of calibration again.
 
 ---
@@ -221,7 +240,9 @@ The split is my judgement, not something the model learnt. The calibration shift
 - [x] Final test on 2026 data
 - [x] SHAP explanations, global and per PR
 - [x] Calibration of predicted probabilities (drift-aware level shift)
-- [ ] RAG coach: checks a PR against the repo's CONTRIBUTING.md and PR template
+- [x] Guidelines collected for all 50 repos, chunked and indexed in Chroma
+- [x] RAG coach v1: checks a PR against the repo's CONTRIBUTING.md and PR template, with decoy handling
+- [ ] Retrieval and answer quality evaluation
 - [ ] A/B test design for the coach
 - [ ] FastAPI + Streamlit app, deployed
 
@@ -245,13 +266,18 @@ src/
   calibration.py        drift correction: one log-odds shift for every score
   refresh_level_shift.py  refits the app's shift on the latest 90 days
   explain.py            per-PR probability and SHAP explanation, split into fixable vs context
-analysis/               data quality checks, funnel, retention, drift, response time, SHAP, charts
+  fetch_guidelines.py   downloads CONTRIBUTING files and PR templates (plus an org-level fallback)
+  build_index.py        chunks and embeds the guidelines into Chroma
+  coach.py              retrieves a repo's rules and asks Claude to check a PR against them
+analysis/               data quality checks, funnel, retention, drift, response time, SHAP, calibration, issue-link gap, charts
 models/                 the trained LightGBM model and the current calibration shift, both used by the app
 docs/figures/           charts used in this README
 repos.csv               the 50 selected repositories
 ```
 
 ## Running it
+
+On Windows, use Python 3.12 from [python.org](https://www.python.org/downloads/), not Anaconda's Python (see [What went wrong](#what-went-wrong-and-what-i-learned)).
 
 ```bash
 python -m venv .venv
@@ -263,6 +289,7 @@ Create a `.env` file with a GitHub token (read-only access to public repositorie
 
 ```
 GITHUB_TOKEN=your_token_here
+ANTHROPIC_API_KEY=your_key_here
 ```
 
 Then, in order:
@@ -282,6 +309,10 @@ python analysis/09_shap.py
 python analysis/12_level_shift.py      # how much each fold over-predicts the next half-year
 python analysis/13_calibration_test.py # before/after calibration on 2026
 python src/refresh_level_shift.py      # writes models/level_shift.json for the app
+python src/fetch_guidelines.py
+python src/fetch_guidelines_fallback.py
+python src/build_index.py              # downloads the embedding model on first run
+python src/coach.py                    # needs ANTHROPIC_API_KEY in .env
 ```
 
 To browse the experiment runs:
@@ -292,7 +323,7 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 ## Built with
 
-Python, DuckDB, SQL, pandas, scikit-learn, LightGBM, Optuna, MLflow, SHAP, matplotlib, GitHub REST and GraphQL APIs. Planned: LangChain, Claude, Chroma, FastAPI, Streamlit, Docker.
+Python, DuckDB, SQL, pandas, scikit-learn, LightGBM, Optuna, MLflow, SHAP, matplotlib, LangChain, sentence-transformers, Chroma, Claude API, GitHub REST and GraphQL APIs. Planned: FastAPI, Streamlit, Docker.
 
 ---
 
