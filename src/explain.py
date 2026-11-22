@@ -1,20 +1,23 @@
+"""Explain one PR's merge prediction with SHAP, split into what the author can fix vs context."""
+import json
 import joblib
 import pandas as pd
 import shap
 from model_config import FEATURES, FEATURE_LABELS
 from calibration import apply_level_shift
-ACTIONABLE = ["log_additions", "log_deletions", "log_changed_files", "n_top_dirs",
+
+ACTIONABLE = ["log_additions", "log_changed_files", "n_top_dirs",
               "touches_tests", "touches_ci", "touches_deps", "mentions_issue",
               "has_checklist", "title_len", "conventional_title", "log_body_len", "body_empty"]
 CONTEXT = ["repo_recent_merge_rate", "log_open_backlog", "repo_age_days", "log_prs_last_30d",
-           "log_account_age", "log_prior_elsewhere", "has_prior_elsewhere",
+           "log_deletions", "log_account_age", "log_prior_elsewhere", "has_prior_elsewhere",
            "language_group", "weekday", "docs_only"]
 HIDDEN = ["hour_utc"]
 
 # Every feature must be in exactly one group
 assert sorted(ACTIONABLE + CONTEXT + HIDDEN) == sorted(FEATURES), "feature grouping is out of date"
 
-MIN_PUSH = 0.05
+MIN_PUSH = 0.05   # ignore pushes smaller than this (log-odds): too small to be worth showing
 
 
 class MergeExplainer:
@@ -23,14 +26,17 @@ class MergeExplainer:
         self.explainer = shap.TreeExplainer(self.model)
         with open("models/level_shift.json") as f:
             self.shift = json.load(f)["shift"]
+
     def explain(self, row, top=3):
         X = row[FEATURES].astype("float64")
         proba = float(apply_level_shift(self.model.predict_proba(X)[:, 1], self.shift)[0])
         sv = pd.Series(self.explainer(X).values[0], index=FEATURES)
-                # Don't suggest adding tests to a docs-only PR
+
+        # Don't suggest adding tests to a docs-only PR
         actionable = ACTIONABLE
         if X.iloc[0]["docs_only"] == 1:
             actionable = [f for f in ACTIONABLE if f != "touches_tests"]
+
         def pick(features, sign=None):
             s = sv[features]
             s = s[s.abs() >= MIN_PUSH]
@@ -50,7 +56,6 @@ class MergeExplainer:
 
 
 if __name__ == "__main__":
-    import json
     from model_config import load_data
 
     test = load_data().query("split == 'test'")
