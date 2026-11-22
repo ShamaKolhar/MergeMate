@@ -184,7 +184,7 @@ These are patterns the model uses, not causes. Docs-only PRs get merged more bec
 For a single PR, the app splits the explanation into two groups:
 
 - **What you can improve:** size, tests, linking an issue, the checklist, title and description.
-- **Context:** the repo's merge rate, backlog and age, the author's account age, language and weekday. Docs-only sits here too, because "make your bug fix a docs change" isn't advice anyone can follow.
+- **Context:** the repo's merge rate, backlog and age, the author's account age, language and weekday. Docs-only sits here too, because "make your bug fix a docs change" isn't advice anyone can follow. So does lines deleted: the first live test told a contributor to "improve" it, which in practice meant "delete more code". What the model really learnt is that PRs adding only new code merge less often than PRs changing existing code, and that's not something to fix.
 
 The split is my judgement, not something the model learnt. The calibration shift moves every PR's baseline by the same amount, so it doesn't change any of these pushes. Two small rules keep the advice sensible: a docs-only PR is never told to add tests, and the hour a PR was opened is never shown, because the effect is tiny, it's in UTC, and it's unlikely to be causal.
 
@@ -198,13 +198,55 @@ The model says *how likely* a PR is to be merged. The coach is meant to say *wha
 
 **Retrieval.** A single search found the right section, but only one of the top three results was really about the question. Searching with the PR's own text would be worse, because contribution rules talk about process, not code. So for each PR the coach always includes the repo's full PR template (it's short, and it is the checklist), then searches the CONTRIBUTING file with four fixed reviewer questions (PR requirements, tests, commit and title format, changelog and style) plus the PR's title, and removes duplicates.
 
-**Generation.** Claude (Haiku) gets those rules and the PR's title, description and changed files, and returns up to five fixes, each quoting the rule it comes from, plus what the PR already does well. The prompt tells it to use only the project's rules and to treat the PR text as data, never as instructions.
+**Generation.** Claude gets those rules and the PR's title, description and changed files, and returns up to five fixes, each quoting the rule it comes from, plus what the PR already does well. The prompt tells it to use only the project's rules and to treat the PR text as data, never as instructions.
 
 **A trap in the rules themselves.** On the first real test, a JabRef PR, the coach told the contributor to end their description with a special "policy compliance" tag and to add a paragraph comparing the PR with honey, chocolate and the moon. JabRef's PR template asks for both, labelled "required by the contribution policy". They are decoys: a person reading the template skips them, while an AI that follows it blindly adds them, which lets maintainers spot AI-written PRs. My coach would have made a human contributor look like a bot. This is indirect prompt injection, where the retrieved documents carry instructions aimed at the model.
 
-The decoy sits inside the same HTML comment as JabRef's real guidance, so stripping comments wasn't an option. A general "ignore decoys" rule in the prompt didn't work either; the model still trusted "required by policy". What worked was saying explicitly that decoys often claim to be required, and that anything unrelated to the code change, or a tag to paste, should be skipped without comment. The coach doesn't point the trap out, because that would help people get around a project's AI detection, and it still enforces JabRef's real rule that AI use must be disclosed. Because answers vary from run to run, this needs to pass repeatedly in the evaluation, not just once.
+The decoy sits inside the same HTML comment as JabRef's real guidance, so stripping comments wasn't an option. A general "ignore decoys" rule in the prompt didn't work either; the model still trusted "required by policy". What worked was saying explicitly that decoys often claim to be required, and that anything unrelated to the code change, or a tag to paste, should be skipped without comment. The coach doesn't point the trap out, because that would help people get around a project's AI detection, and it still enforces JabRef's real rule that AI use must be disclosed. Because answers vary from run to run, I tested it 30 times on three different JabRef PRs: the coach stayed clean in all 30.
 
 **The model and the coach checked against each other.** On that same PR, both flagged missing tests. The coach also said the PR correctly links its issue, while the model had marked "links an issue" as missing. The PR wrote `Closes https://github.com/...`, and my feature's regex only matched `Closes #123`. Across the dataset, the regex misses 6.7% of PRs that GitHub shows as linked, and those merged at 57%, more than any other group. GitHub's own link count would catch them, but it includes links added after opening, which risks the same leak as `author_association`, so the model keeps the regex feature (the test set has already been used) and this is listed under limitations.
+
+### Scoring a live PR
+
+The app takes a link to any pull request in the 50 repositories. It fetches the PR from the GitHub API and builds the model's 24 features by running the *same SQL* used in training, against a temporary in-memory copy of the PR. Reusing the training code avoids training-serving skew, where the app quietly computes a feature differently from the model's training data.
+
+To check it, I rebuilt the features live for a PR that was already in the training set: 22 of 24 matched exactly. The other two are counted live on purpose, because the stored data stops in November: the PRs opened in the last 30 days (170 stored vs 171 live) and the open-PR backlog, which can only be counted as it is today. That's exact for a new PR and approximate for an old one, so the app shows a note for PRs that are already closed. It also warns when the author isn't a first-time contributor, since that's not what the model was trained on.
+
+## Evaluating the coach
+
+Each part of the coach was tested separately, with the cost of the whole evaluation kept under $2.
+
+**1. Does retrieval find the rules?** For 10 random repositories (two per language), each of the coach's four reviewer questions was checked against the full CONTRIBUTING file by an LLM judge (Sonnet): is the answer in the file, and did search find it? 12 of the 40 cases had no answer in the file at all (many projects simply don't write down rules on every topic). Of the 28 that did, search found 25 (**89%**).
+
+| Question | Found |
+|---|---|
+| Are tests required? | 7/7 |
+| Commit and PR title format | 7/7 |
+| PR requirements (checklist, description, linked issue) | 5/6 |
+| Changelog, documentation and code style | 6/8 |
+
+The weakest question asks about three things at once, which blurs its embedding. Splitting it is the obvious next step, but I'd have to test that on different repositories, not the ones used to find the problem.
+
+**2. Are the answers right, and is a bigger model worth it?** 20 PRs from the 2026 test set, each from a different repository, were reviewed by the coach twice: once with Claude Haiku and once with Claude Sonnet. Claude Opus judged both answers side by side, without knowing which model wrote which, scoring every bullet point as grounded (the rule really exists), accurate (what it says about the PR is true) and useful. To keep the comparison fair, the judge is a third model (so neither candidate is grading itself), the A/B order was random for each PR, and the judge was told to ignore length and style.
+
+| | Haiku | Sonnet |
+|---|---|---|
+| Bullets grounded in a real rule | 97% | 96% |
+| Bullets accurate about the PR | 83% | 94% |
+| Bullets useful | 83% | 92% |
+| Preferred overall (20 PRs) | 3 | 15 (2 ties) |
+| Cost per PR | $0.001 | $0.012 |
+| Time per PR | 6.7 s | 6.4 s |
+
+Both models stick to the project's rules; invented rules are rare for either. The difference is in reading the PR correctly: about one Haiku bullet in six says something untrue about the PR, against one in seventeen for Sonnet. Sonnet's preference is unlikely to be chance (sign test, p = 0.0075). The judge picked whichever answer was shown first 12 times out of 18, a lean that isn't statistically significant (p = 0.24) and can't favour either model, because the order was randomised.
+
+The app uses **Haiku by default, with Sonnet available on request**. Sonnet is clearly better, but it costs 12 times as much per review, and a free public demo runs on my own API credits, so each model has a daily usage cap.
+
+**3. Does the coach resist decoys every time?** 30 runs across three JabRef PRs, checked with a simple text search for the decoy content rather than a judge: **30/30 clean**.
+
+**4. Can the judges be trusted?** LLM judges make mistakes too: one retrieval case got a different verdict on two runs with identical passages. So I hand-checked a random 20 of the judged items myself (10 retrieval cases, 10 bullet points checked against the actual PR on GitHub). I agreed with the retrieval judge on all 10 retrieval cases and with the answer judge on 8 of 10 bullets (**18/20 overall**). Both disagreements went the same way: the judge accepted a claim that sounded plausible but was wrong about the PR. One bullet described a PR's review passes as "AI-driven" when the PR never said so; another warned that a linked issue had no maintainer reply, when a maintainer had opened it. So the answer judge leans lenient, and the accuracy figures above are best read as upper bounds for both models.
+
+**What 50 projects say about AI.** A text scan of all the collected rules found that 15 of the 50 projects (30%) have a policy on AI-assisted contributions. Two ban AI-written content outright, most require disclosure, and two speak directly to AI agents (one asks them not to write the PR summary). JabRef was the only one using decoys. This is why the coach only advises and never writes anything for the contributor: a tool that drafted PR text would break the rules of the very projects it's meant to help with.
 
 ---
 
@@ -226,6 +268,8 @@ The decoy sits inside the same HTML comment as JabRef's real guidance, so stripp
 - The retention and response-time findings are associations, not causal effects.
 - Calibration is fixed on average, but scores are still too bunched towards the middle: the weakest PRs are over-predicted and the strongest slightly under-predicted.
 - The "links an issue" feature misses full-URL links (`Closes https://...`): 6.7% of PRs that GitHub shows as linked.
+- The coach evaluation is small (40 retrieval cases, 20 PRs, 30 decoy runs). It's enough to compare models and spot weaknesses, not to give precise rates.
+- The answer-quality scores come from an LLM judge that a 20-item hand check found slightly lenient (it missed 2 inaccurate bullets out of 10).
 - The drift correction needs refreshing as the merge rate moves. A model left alone will drift out of calibration again.
 
 ---
@@ -242,7 +286,8 @@ The decoy sits inside the same HTML comment as JabRef's real guidance, so stripp
 - [x] Calibration of predicted probabilities (drift-aware level shift)
 - [x] Guidelines collected for all 50 repos, chunked and indexed in Chroma
 - [x] RAG coach v1: checks a PR against the repo's CONTRIBUTING.md and PR template, with decoy handling
-- [ ] Retrieval and answer quality evaluation
+- [x] Coach evaluation: retrieval, answer quality (Haiku vs Sonnet, blind-judged), decoy robustness, human check
+- [x] Live scoring of any PR in the 50 repositories
 - [ ] A/B test design for the coach
 - [ ] FastAPI + Streamlit app, deployed
 
@@ -269,6 +314,9 @@ src/
   fetch_guidelines.py   downloads CONTRIBUTING files and PR templates (plus an org-level fallback)
   build_index.py        chunks and embeds the guidelines into Chroma
   coach.py              retrieves a repo's rules and asks Claude to check a PR against them
+  live_pr.py            fetches a live PR and builds its features with the training SQL
+  pipeline.py           one call: PR link -> score, explanation, coach advice
+eval/                   coach evaluation scripts and results (retrieval, answers, decoys, hand labels)
 analysis/               data quality checks, funnel, retention, drift, response time, SHAP, calibration, issue-link gap, charts
 models/                 the trained LightGBM model and the current calibration shift, both used by the app
 docs/figures/           charts used in this README
@@ -313,6 +361,18 @@ python src/fetch_guidelines.py
 python src/fetch_guidelines_fallback.py
 python src/build_index.py              # downloads the embedding model on first run
 python src/coach.py                    # needs ANTHROPIC_API_KEY in .env
+python src/pipeline.py https://github.com/JabRef/jabref/pull/17894
+```
+
+Coach evaluation (about $1.60 in API calls in total):
+
+```bash
+python eval/retrieval_eval.py
+python eval/answer_eval.py
+python eval/summarize_answers.py
+python eval/decoy_eval.py
+python eval/make_labels.py make        # then fill my_label by hand
+python eval/make_labels.py score
 ```
 
 To browse the experiment runs:
